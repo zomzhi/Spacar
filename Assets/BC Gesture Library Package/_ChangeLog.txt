@@ -1,0 +1,25 @@
+Change Log
+
+1.1
+Fixed drag bug
+all gestures have:
+	alternateCamera 
+	topColliderOnly
+	TargetGameObject is now targetCollider
+	targetMessageObject is now targetMessageObjects
+Gesture Engine is a new gesture - ensures gesture always exist
+Drag Gesture gains:
+	restrictDirection
+	restrictScreenPercentMin
+	restrictSceenPercentMax
+Swipe Gesture Gains:
+	minGestureLength
+	maxTime
+Tap Gesture Gains:
+	startsOnObject
+	movesOnObject
+	endsOnObject
+	enforceStationary
+
+1.02
+Initial Version of Library
