@@ -139,7 +139,7 @@ namespace MyCompany.MyGame.Level
 				// TODO: add to a parent holder
 				m_bridgeGo = new GameObject ("LevelBridge");
 				m_bridgeGo.transform.SetParent (generator.transform);
-				if (GameDefine.debugMode)
+				if (GameSystem.Instance.debugMode)
 				{
 					LevelBridgeDebugComponent comp = m_bridgeGo.AddComponent<LevelBridgeDebugComponent> ();
 					comp.levelBridge = this;
@@ -620,6 +620,23 @@ namespace MyCompany.MyGame.Level
 				return true;
 
 			return false;
+		}
+
+		public BridgeMap.Node NodeFromWorldPoint (Vector3 point)
+		{
+			Vector3 dir = point - leftBottom;
+			float h = Vector3.Dot (dir, Right);
+			float v = Vector3.Dot (dir, Forward);
+			return Map.GetCorrespondNode (h, v);
+		}
+
+		public Vector3 WorldPointFromNode (BridgeMap.Node node, float touchGroundHeight = 0f)
+		{
+			Vector3 result = leftBottom;
+			result += Right * (node.coord.x * 1f + 0.5f);
+			result += Forward * (node.coord.y * 1f + 0.5f);
+			result += Up * (GameDefine.BLOCK_TALL + touchGroundHeight);
+			return result;
 		}
 
 		#endregion

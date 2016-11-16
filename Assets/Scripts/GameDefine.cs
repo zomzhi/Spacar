@@ -5,9 +5,6 @@ namespace MyCompany.MyGame
 {
 	public class GameDefine
 	{
-		// TODO: move this variable to game system component.
-		public const bool debugMode = true;
-
 		public const string RESOURCE_FOLDER = "Assets/Resources/";
 		public const string BLOCK_PREFAB_RESOURCE_PATH = "BlockPrefabs/";
 		public const string PREFAB_EXTENSION = ".prefab";
@@ -60,6 +57,11 @@ namespace MyCompany.MyGame
 		/// 默认第一座桥的Block块数
 		/// </summary>
 		public const int DEFAULT_FIRST_BRIDGE_BLOCK_COUNT = 5;
+
+		/// <summary>
+		/// 四周不可通行的格子所增加的代价
+		/// </summary>
+		public const int NOT_WALKABLE_PENALTY = 20;
 
 		/// <summary>
 		/// 初始Block的位置

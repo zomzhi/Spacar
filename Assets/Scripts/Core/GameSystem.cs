@@ -15,6 +15,7 @@ namespace MyCompany.MyGame
 	public sealed class GameSystem : MonoSingleton<GameSystem>
 	{
 		public bool logMessage = true;
+		public bool debugMode = true;
 		public MainUI mainUI;
 
 		public Text progress;
@@ -86,6 +87,11 @@ namespace MyCompany.MyGame
 			if (Input.GetKeyDown (KeyCode.S))
 			{
 				StartPlay ();
+			}
+
+			if (Input.GetKeyDown (KeyCode.G))
+			{
+				StartGenerate ();
 			}
 		}
 
@@ -210,6 +216,11 @@ namespace MyCompany.MyGame
 		public void StartPlay ()
 		{
 			currentGamePlay.StartPlay ();
+		}
+
+		public void StartGenerate ()
+		{
+			currentGamePlay.StartGenerate ();
 		}
 
 		#endregion
