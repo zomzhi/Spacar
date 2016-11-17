@@ -4,6 +4,7 @@ using MyCompany.MyGame.Util;
 using MyCompany.Common.Util;
 using Newtonsoft.Json;
 using MyCompany.Common.Signal;
+using MyCompany.MyGame.PathFinding;
 
 namespace MyCompany.MyGame.Level
 {
@@ -32,6 +33,7 @@ namespace MyCompany.MyGame.Level
 		void Awake ()
 		{
 			SignalMgr.instance.Subscribe (GAME_EVT.ON_PLAYER_SWITCH_BRIDGE, (funsig<LevelBridge, LevelBridge>)OnPlayerSwitchBridge);
+			gameObject.AddComponent<PathRequestManager> ();
 		}
 
 		void OnDestroy ()

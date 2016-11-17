@@ -38,6 +38,7 @@ namespace MyCompany.MyGame
 		//		private LevelBridge nextBridge;
 
 		int groundLayerMask;
+		bool initialized = false;
 
 		#endregion
 
@@ -249,14 +250,27 @@ namespace MyCompany.MyGame
 
 		#region Util Methods
 
-		public void StartPlay ()
+		public void StartGenerate ()
 		{
 			levelGenerator.GenerateStartPath (firstLevelAsset, dummyBridge);
-			startPlay = true;
 			camController.playerController = playerController;
 			camController.StartFollow (dummyBridge);
-//			playerController.InitPlayAttribute ();
-//			playerController.InitLevelParam (curBridge);
+			if (GameSystem.Instance.debugMode)
+			{
+				PathFindingTest pathfindTest = new GameObject ("PathfindingTest").AddComponent<PathFindingTest> ();
+				if (pathfindTest != null)
+				{
+					pathfindTest.Initialize (dummyBridge.next);
+				}
+			}
+			initialized = true;
+		}
+
+		public void StartPlay ()
+		{
+			if (!initialized)
+				StartGenerate ();
+			startPlay = true;
 			playerController.StartRun (dummyBridge);
 		}
 

@@ -31,6 +31,20 @@ public class LevelBridgeInspector : Editor
 	{
 		DrawDefaultInspector ();
 
+		if (EditorGUILayout.Toggle ("view sign value: ", levelBridgeDebugComp.viewSignValue))
+		{
+			levelBridgeDebugComp.viewSignValue = true;
+			levelBridgeDebugComp.viewPenaltyValue = false;
+		}
+
+		if (EditorGUILayout.Toggle ("view penalty value: ", levelBridgeDebugComp.viewPenaltyValue))
+		{
+			levelBridgeDebugComp.viewSignValue = false;
+			levelBridgeDebugComp.viewPenaltyValue = true;
+		}
+
+		GUILayout.Space (20f);
+
 		EditorGUILayout.ColorField ("BreakableArea: ", Color.red);
 		EditorGUILayout.ColorField ("MainPathArea: ", Color.green);
 		EditorGUILayout.ColorField ("ExtendPathArea: ", Color.yellow);
@@ -80,7 +94,12 @@ public class LevelBridgeInspector : Editor
 					Handles.DrawSolidRectangleWithOutline (verts, Handles.color, Color.black);
 
 				if (levelBridgeDebugComp.viewMapValue)
-					Handles.Label (centerPos, bridgeMap.GetValue (x, y).ToString (), mapValueStyle);
+				{
+					if (levelBridgeDebugComp.viewSignValue)
+						Handles.Label (centerPos, bridgeMap.GetValue (x, y).ToString (), mapValueStyle);
+					else if (levelBridgeDebugComp.viewPenaltyValue)
+						Handles.Label (centerPos, bridgeMap.GetUnmodifiedPenalty (x, y).ToString (), mapValueStyle);
+				}
 			}
 		}
 	}

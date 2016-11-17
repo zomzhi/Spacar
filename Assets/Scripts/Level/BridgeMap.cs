@@ -59,102 +59,114 @@ namespace MyCompany.MyGame.Level
 		}
 	}
 
-	public class Node : IHeapItem<Node>
-	{
-		/// <summary>
-		/// 节点坐标
-		/// </summary>
-		public Coordinate coord;
-
-		/// <summary>
-		/// 寻路中到起始节点的代价
-		/// </summary>
-		public int gCost;
-
-		/// <summary>
-		/// 寻路中到终点节点的代价
-		/// </summary>
-		public int hCost;
-
-		/// <summary>
-		/// 父节点（寻路中使用）
-		/// </summary>
-		public Node parent;
-
-		/// <summary>
-		/// 地图标志
-		/// </summary>
-		public sbyte sign;
-
-		/// <summary>
-		/// 节点代价
-		/// </summary>
-		/// <value>The f cost.</value>
-		public int fCost{ get { return gCost + hCost; } }
-
-		/// <summary>
-		/// 节点在堆中的索引
-		/// </summary>
-		/// <value>The index of the heap.</value>
-		public int HeapIndex{ get; set; }
-
-		public Node (int x, int y)
-		{
-			coord = new Coordinate (x, y);
-		}
-
-		public Node (Coordinate _coord)
-		{
-			coord = _coord;
-		}
-
-		#region Sign Op
-
-		public bool IsPlaceable ()
-		{
-			return ((sign & (sbyte)EMapSign.Placeable) > 0 && !IsObstacle ());
-		}
-
-		public bool IsBreakable ()
-		{
-			return (sign & (sbyte)EMapSign.Breakable) > 0;
-		}
-
-		public bool IsMainPath ()
-		{
-			return (sign & (sbyte)EMapSign.MainPath) > 0;
-		}
-
-		public bool IsExtendPath ()
-		{
-			return (sign & (sbyte)EMapSign.ExtendPath) > 0;
-		}
-
-		public bool IsObstacle ()
-		{
-			return (sign & (sbyte)EMapSign.Obstacle) > 0;
-		}
-
-		#endregion
-
-
-		public int CompareTo (Node nodeToCompare)
-		{
-			int compare = fCost.CompareTo (nodeToCompare.fCost);
-			if (compare == 0)
-			{
-				compare = hCost.CompareTo (nodeToCompare.hCost);
-			}
-			return -compare;
-		}
-	}
-
-
 	public class BridgeMap
 	{
+		public class Node : IHeapItem<Node>
+		{
+			/// <summary>
+			/// 节点坐标
+			/// </summary>
+			public Coordinate coord;
+
+			/// <summary>
+			/// 寻路中到起始节点的代价
+			/// </summary>
+			public int gCost;
+
+			/// <summary>
+			/// 寻路中到终点节点的代价
+			/// </summary>
+			public int hCost;
+
+			/// <summary>
+			/// 父节点（寻路中使用）
+			/// </summary>
+			public Node parent;
+
+			/// <summary>
+			/// 地图标志
+			/// </summary>
+			public sbyte sign;
+
+			/// <summary>
+			/// 节点代价
+			/// </summary>
+			/// <value>The f cost.</value>
+			public int fCost{ get { return gCost + hCost; } }
+
+			/// <summary>
+			/// 节点在堆中的索引
+			/// </summary>
+			/// <value>The index of the heap.</value>
+			public int HeapIndex{ get; set; }
+
+			/// <summary>
+			/// 地形代价
+			/// </summary>
+			/// <value>The penalty.</value>
+			public int Penalty{ get; set; }
+
+			public Node (int x, int y)
+			{
+				coord = new Coordinate (x, y);
+				Penalty = -1;
+			}
+
+			public Node (Coordinate _coord)
+			{
+				coord = _coord;
+				Penalty = -1;
+			}
+
+			#region Sign Op
+
+			public bool IsPlaceable ()
+			{
+				return ((sign & (sbyte)EMapSign.Placeable) > 0 && !IsObstacle ());
+			}
+
+			public bool IsBreakable ()
+			{
+				return (sign & (sbyte)EMapSign.Breakable) > 0;
+			}
+
+			public bool IsMainPath ()
+			{
+				return (sign & (sbyte)EMapSign.MainPath) > 0;
+			}
+
+			public bool IsExtendPath ()
+			{
+				return (sign & (sbyte)EMapSign.ExtendPath) > 0;
+			}
+
+			public bool IsObstacle ()
+			{
+				return (sign & (sbyte)EMapSign.Obstacle) > 0;
+			}
+
+			public bool IsWalkable ()
+			{
+				return !IsObstacle ();
+			}
+
+			#endregion
+
+
+			public int CompareTo (Node nodeToCompare)
+			{
+				int compare = fCost.CompareTo (nodeToCompare.fCost);
+				if (compare == 0)
+				{
+					compare = hCost.CompareTo (nodeToCompare.hCost);
+				}
+				return -compare;
+			}
+		}
+
 		public int Width{ get; private set; }
 		public int Height{ get; private set; }
-
+		public int GridCount{ get { return Width * Height; } }
 
 		//		sbyte[,] map;
 		Node[,] mapGrid;
@@ -556,6 +568,119 @@ namespace MyCompany.MyGame.Level
 			}
 		}
 
+		public Node GetCorrespondNode (float h, float v)
+		{
+			Node result = null;
+			if (h >= 0 && h <= Width && v >= 0 && v <= Height)
+			{
+				int x = Mathf.FloorToInt (h);
+				int y = Mathf.FloorToInt (v);
+				result = mapGrid [x, y];
+			}
+			return result;
+		}
+
+		/// <summary>
+		/// 返回节点的周围节点列表
+		/// </summary>
+		/// <returns>The neighbours.</returns>
+		/// <param name="node">Node.</param>
+		public List<Node> GetNeighbours (Node node)
+		{
+			List<Node> neighbours = new List<Node> ();
+			for (int i = -1; i <= 1; i++)
+			{
+				for (int j = -1; j <= 1; j++)
+				{
+					if (i == 0 && j == 0)
+						continue;
+					int x = node.coord.x + i;
+					int y = node.coord.y + j;
+					if (ValidX (x) && ValidY (y))
+						neighbours.Add (mapGrid [x, y]);
+				}
+			}
+			return neighbours;
+		}
+
+		/// <summary>
+		/// 得到节点的地形代价
+		/// </summary>
+		/// <returns>The penalty.</returns>
+		/// <param name="node">Node.</param>
+		public int GetPenalty (Node node)
+		{
+			if (node.Penalty >= 0)
+				return node.Penalty;
+
+			return UpdatePenalty (node);
+		}
+
+		public int GetUnmodifiedPenalty (int x, int y)
+		{
+			return mapGrid [x, y].Penalty;
+		}
+
+		/// <summary>
+		/// 更新节点地形代价
+		/// </summary>
+		/// <returns>The penalty.</returns>
+		/// <param name="node">Node.</param>
+		public int UpdatePenalty (Node node)
+		{
+
+			// four corner version
+//			Coordinate leftCoord = new Coordinate (node.coord.x - 1, node.coord.y);
+//			Coordinate upCoord = new Coordinate (node.coord.x, node.coord.y + 1);
+//			Coordinate rightCoord = new Coordinate (node.coord.x + 1, node.coord.y);
+//			Coordinate bottomCoord = new Coordinate (node.coord.x, node.coord.y - 1);
+//			if (ValidCoordinate (leftCoord) && mapGrid [leftCoord.x, leftCoord.y].IsWalkable () &&
+//			    ValidCoordinate (upCoord) && mapGrid [upCoord.x, upCoord.y].IsWalkable () &&
+//			    ValidCoordinate (rightCoord) && mapGrid [rightCoord.x, rightCoord.y].IsWalkable () &&
+//			    ValidCoordinate (bottomCoord) && mapGrid [bottomCoord.x, bottomCoord.y].IsWalkable ())
+//			{
+//				node.Penalty = 0;
+//			}
+//			else
+//				node.Penalty = GameDefine.NOT_WALKABLE_PENALTY;
+
+			// eight corner version
+			bool ret = true;
+			for (int i = -1; i <= 1; i++)
+			{
+				for (int j = -1; j <= 1; j++)
+				{
+					if (i == 0 && j == 0)
+						continue;
+					int checkX = node.coord.x + i;
+					int checkY = node.coord.y + j;
+					ret &= (ValidX (checkX) && ValidY (checkY) && mapGrid [checkX, checkY].IsWalkable ());
+					if (!ret)
+						break;
+				}
+			}
+			node.Penalty = ret ? 0 : GameDefine.NOT_WALKABLE_PENALTY;
+
+			return node.Penalty;
+		}
+
+		/// <summary>
+		/// 对角线节点是否可通行
+		/// </summary>
+		/// <returns><c>true</c>, if walkable was diagonaled, <c>false</c> otherwise.</returns>
+		/// <param name="nodeA">Node a.</param>
+		/// <param name="nodeB">Node b.</param>
+		public bool DiagonalWalkable (Node nodeA, Node nodeB)
+		{
+			if (Mathf.Abs (nodeA.coord.x - nodeB.coord.x) == 1 && Mathf.Abs (nodeA.coord.y - nodeB.coord.y) == 1)
+			{
+				// 是对角线节点
+				if (!mapGrid [nodeA.coord.x, nodeB.coord.y].IsWalkable () || !mapGrid [nodeB.coord.x, nodeA.coord.y].IsWalkable ())
+					return false;
+			}
+			return true;
+		}
+
 		#endregion
 
 		#region Obstacle Utils
@@ -574,8 +699,7 @@ namespace MyCompany.MyGame.Level
 			{
 				for (int y = 0; y < Height; y++)
 				{
-					//					map [x, y] &= ~(sbyte)EMapSign.Obstacle;
-					mapGrid [x, y].sign &= ~(sbyte)EMapSign.Obstacle;
+					ResetGridNode (x, y);
 					if (IsPlaceable (x, y))
 					{
 						int rand = UnityEngine.Random.Range (0, 100);
@@ -709,6 +833,12 @@ namespace MyCompany.MyGame.Level
 			path.Add (end);
 			FindConnectedPath (ref path, start, end);
 			return path;
+		}
+
+		private void ResetGridNode (int x, int y)
+		{
+			mapGrid [x, y].sign &= ~(sbyte)EMapSign.Obstacle;
+			mapGrid [x, y].Penalty = -1;
 		}
 
 		#endregion
