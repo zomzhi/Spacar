@@ -3,8 +3,8 @@ using UnityEngine;
 
 namespace MyCompany.MyGame.Data.Character
 {
-	[CreateAssetMenu (menuName = "Attribute/Character Attribute")]
-	public class CharacterAttribute : ScriptableObject
+	[CreateAssetMenu (menuName = "Attribute/PlayerAttribute Attribute")]
+	public class PlayerAttribute : ScriptableObject
 	{
 		/// <summary>
 		/// 水平移动最大速度

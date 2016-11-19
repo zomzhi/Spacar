@@ -83,7 +83,7 @@ namespace HutongGames.PlayMaker.Actions
 		[UIHint (UIHint.Variable)]
 		public FsmFloat rollOneCircleTime;
 
-		CharacterAttribute playerAttribute;
+		PlayerAttribute playerAttribute;
 
 		public override void Reset ()
 		{
@@ -122,7 +122,7 @@ namespace HutongGames.PlayMaker.Actions
 				return;
 			}
 
-			playerAttribute = attribute.Value as CharacterAttribute;
+			playerAttribute = attribute.Value as PlayerAttribute;
 			Debug.Assert (playerAttribute != null);
 
 			if (!horizonSpeedMax.IsNone)

@@ -22,7 +22,7 @@ namespace MyCompany.MyGame.Player
 	{
 		#region Public Member
 
-		public CharacterAttribute playerAttribute;
+		public PlayerAttribute playerAttribute;
 
 		[HideInInspector]
 		public LevelBridge currentBridge;
