@@ -66,9 +66,54 @@ namespace MyCompany.MyGame.NPC
 			return false;
 		}
 
-		public virtual void SetupBridgePath (ref BridgePath bridgePath)
+		public void SetupBridgePath (ref BridgePath bridgePath)
 		{
-			
+			if (bridgePath.Type == BridgePath.PathType.ToNextBridge)
+			{
+				if (bridgePath.bridge.Up == bridgePath.nextBridge.Up)
+				{
+					SetupTurnBridgePath (ref bridgePath);
+				}
+				else if (bridgePath.bridge.Forward == bridgePath.nextBridge.Up)
+				{
+					SetupExceedBridgePath (ref bridgePath);
+				}
+				else if (bridgePath.bridge.Up == bridgePath.nextBridge.Forward)
+				{
+					SetupJumpUpBridgePath (ref bridgePath);
+				}
+				else if (bridgePath.nextBridge.Up == bridgePath.bridge.Right ||
+				         bridgePath.nextBridge.Up == -bridgePath.bridge.Right)
+				{
+					SetupTurnExceedBridgePath (ref bridgePath);
+				}
+				else
+					UnityLog.LogError ("Bridge path type not implemented yet!");
+			}
+			else if (bridgePath.Type == BridgePath.PathType.ToPosition)
+			{
+				SetupToPosBridgePath (ref bridgePath);
+			}
+		}
+
+		protected virtual void SetupToPosBridgePath (ref BridgePath bridgePath)
+		{
+		}
+
+		protected virtual void SetupTurnBridgePath (ref BridgePath bridgePath)
+		{
+		}
+
+		protected virtual void SetupExceedBridgePath (ref BridgePath bridgePath)
+		{
+		}
+
+		protected virtual void SetupJumpUpBridgePath (ref BridgePath bridgePath)
+		{
+		}
+
+		protected virtual void SetupTurnExceedBridgePath (ref BridgePath bridgePath)
+		{
 		}
 
 		#endregion
