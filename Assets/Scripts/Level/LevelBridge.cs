@@ -469,8 +469,7 @@ namespace MyCompany.MyGame.Level
 				foreach (BridgeMap.Node node in connectBridgeNodes)
 				{
 					int startY = this.height - 1 - node.coord.x;
-					for (int startX = this.width / 2; startX >= 0; startX--)
-//					for (int startX = this.width - 1; startX >= 0; startX--)
+					for (int startX = this.width - 1; startX >= this.width / 2; startX--)
 					{
 						if (!this.Map.ValidX (startX) || !this.Map.ValidY (startY))
 						{
