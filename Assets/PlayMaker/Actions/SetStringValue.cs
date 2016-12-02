@@ -15,7 +15,7 @@ namespace HutongGames.PlayMaker.Actions
         [UIHint(UIHint.TextArea)]
 		public FsmString stringValue;
 		
-		public bool everyFrame;
+        public bool everyFrame;
 
 		public override void Reset()
 		{

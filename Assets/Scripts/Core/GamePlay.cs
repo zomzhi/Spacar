@@ -5,6 +5,7 @@ using MyCompany.MyGame.Player;
 using MyCompany.MyGame.CameraControl;
 using Newtonsoft.Json;
 using MyCompany.Common.Signal;
+using MyCompany.MyGame.NPC;
 
 namespace MyCompany.MyGame
 {
@@ -262,6 +263,16 @@ namespace MyCompany.MyGame
 				{
 					pathfindTest.Initialize (dummyBridge.next);
 				}
+
+				GameObject alphaOnePrefab = Resources.Load<GameObject> ("Enemy/AlphaOne");
+				GameObject alphaGo = Instantiate (alphaOnePrefab) as GameObject;
+				EnemyController enemyController = alphaGo.GetComponent<EnemyController> ();
+
+				GameObject targetGo = GameObject.CreatePrimitive (PrimitiveType.Cube);
+				targetGo.name = "Target";
+				enemyController.target = targetGo.transform;
+
+				enemyController.Initialize (dummyBridge.next, dummyBridge.next.leftBottom);
 			}
 			initialized = true;
 		}

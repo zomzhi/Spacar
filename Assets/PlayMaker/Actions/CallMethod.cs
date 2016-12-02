@@ -40,7 +40,16 @@ namespace HutongGames.PlayMaker.Actions
         private ParameterInfo[] cachedParameterInfo;
         private object[] parametersArray;
         private string errorString;
-        
+
+        public override void Reset()
+        {
+            behaviour = null;
+            methodName = null;
+            parameters = null;
+            storeResult = null;
+            everyFrame = false;
+        }
+
         public override void OnEnter()
         {
             parametersArray = new object[parameters.Length];
@@ -68,7 +77,7 @@ namespace HutongGames.PlayMaker.Actions
 
             if (NeedToUpdateCache())
             {
-                if(!DoCache())
+                if (!DoCache())
                 {
                     Debug.LogError(errorString);
                     Finish();
@@ -76,7 +85,7 @@ namespace HutongGames.PlayMaker.Actions
                 }
             }
 
-            object result = null;
+            object result;
             if (cachedParameterInfo.Length == 0)
             {
                 result = cachedMethodInfo.Invoke(cachedBehaviour.Value, null);
@@ -87,12 +96,30 @@ namespace HutongGames.PlayMaker.Actions
                 {
                     var parameter = parameters[i];
                     parameter.UpdateValue();
-                    parametersArray[i] = parameter.GetValue();
+                    if (parameter.Type == VariableType.Array)
+                    {
+                        parameter.UpdateValue();
+                        var objectArray = parameter.GetValue() as object[];
+                        var realType = cachedParameterInfo[i].ParameterType.GetElementType();
+                        var convertedArray = Array.CreateInstance(realType, objectArray.Length);
+                        for (int index = 0; index < objectArray.Length; index++)
+                            convertedArray.SetValue(objectArray[index], index);
+                        parametersArray[i] = convertedArray;
+                    }
+                    else
+                    {
+                        parameter.UpdateValue();
+                        parametersArray[i] = parameter.GetValue();
+                    }             
                 }
 
                 result = cachedMethodInfo.Invoke(cachedBehaviour.Value, parametersArray);
             }
-            storeResult.SetValue(result);
+
+            if (storeResult != null && !storeResult.IsNone && storeResult.Type != VariableType.Unknown)
+            {
+                storeResult.SetValue(result);
+            }
         }
 
         // TODO: Move tests to helper function in core
@@ -105,14 +132,24 @@ namespace HutongGames.PlayMaker.Actions
                 cachedMethodName.Name != methodName.Name;       // methodName variable name changed
         }
 
+        private void ClearCache()
+        {
+            cachedBehaviour = null;
+            cachedMethodName = null;
+            cachedType = null;
+            cachedMethodInfo = null;
+            cachedParameterInfo = null;
+        }
+
         private bool DoCache()
         {
             //Debug.Log("DoCache");
-
+            
+            ClearCache();
             errorString = string.Empty;
             cachedBehaviour = new FsmObject(behaviour);
             cachedMethodName = new FsmString(methodName);
-            
+
             if (cachedBehaviour.Value == null)
             {
                 if (behaviour.UsesVariable && !Application.isPlaying)
@@ -127,30 +164,55 @@ namespace HutongGames.PlayMaker.Actions
                 Finish();
                 return false;
             }
-            
+
             cachedType = behaviour.Value.GetType();
 
-#if NETFX_CORE
-            cachedMethodInfo = cachedType.GetTypeInfo().GetDeclaredMethod(methodName.Value);
-#else
             var types = new List<Type>(parameters.Length);
             foreach (var each in parameters)
             {
                 types.Add(each.RealType);
             }
 
+#if NETFX_CORE
+            var methods = cachedType.GetTypeInfo().GetDeclaredMethods(methodName.Value);
+            foreach (var method in methods)
+            {
+                if (TestMethodSignature(method, types))
+                {
+                    cachedMethodInfo = method;
+                }
+            }
+#else
             cachedMethodInfo = cachedType.GetMethod(methodName.Value, types.ToArray());
-#endif            
+#endif
             if (cachedMethodInfo == null)
             {
                 errorString += "Invalid Method Name or Parameters: " + methodName.Value + "\n";
                 Finish();
                 return false;
-            }
+            }              
 
             cachedParameterInfo = cachedMethodInfo.GetParameters();
+
             return true;
         }
+
+#if NETFX_CORE
+        private bool TestMethodSignature(MethodInfo method, List<Type> parameterTypes)
+        {
+            if (method == null) return false;
+            var methodParameters = method.GetParameters();
+            if (methodParameters.Length != parameterTypes.Count) return false;
+            for (var i = 0; i < methodParameters.Length; i++)
+            {
+                if (!ReferenceEquals(methodParameters[i].ParameterType, parameterTypes[i]))
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+#endif
 
         public override string ErrorCheck()
         {
@@ -168,7 +230,6 @@ namespace HutongGames.PlayMaker.Actions
                 return errorString; // last error message
             }
 
-            errorString = string.Empty;
             if (!DoCache())
             {
                 return errorString;
@@ -176,7 +237,7 @@ namespace HutongGames.PlayMaker.Actions
 
             if (parameters.Length != cachedParameterInfo.Length)
             {
-                return "Parameter count does not match method.\nMethod has " + cachedParameterInfo.Length + " parameters.\nYou specified " +parameters.Length + " paramaters.";
+                return "Parameter count does not match method.\nMethod has " + cachedParameterInfo.Length + " parameters.\nYou specified " + parameters.Length + " paramaters.";
             }
 
             for (var i = 0; i < parameters.Length; i++)
@@ -184,7 +245,7 @@ namespace HutongGames.PlayMaker.Actions
                 var p = parameters[i];
                 var paramType = p.RealType;
                 var paramInfoType = cachedParameterInfo[i].ParameterType;
-                if (!ReferenceEquals(paramType, paramInfoType ))
+                if (!ReferenceEquals(paramType, paramInfoType))
                 {
                     return "Parameters do not match method signature.\nParameter " + (i + 1) + " (" + paramType + ") should be of type: " + paramInfoType;
                 }
@@ -197,12 +258,36 @@ namespace HutongGames.PlayMaker.Actions
                     return "Method does not have return.\nSpecify 'none' in Store Result.";
                 }
             }
-            else if (!ReferenceEquals(cachedMethodInfo.ReturnType,storeResult.RealType))
+            else if (!ReferenceEquals(cachedMethodInfo.ReturnType, storeResult.RealType))
             {
                 return "Store Result is of the wrong type.\nIt should be of type: " + cachedMethodInfo.ReturnType;
             }
 
             return string.Empty;
         }
+
+#if UNITY_EDITOR
+        public override string AutoName()
+        {
+            var name = methodName + "(";
+            for (int i = 0; i < parameters.Length; i++)
+            {
+                var param = parameters[i];
+                name += ActionHelpers.GetValueLabel(param.NamedVar);
+                if (i < parameters.Length - 1)
+                {
+                    name += ",";
+                }
+            }
+            name += ")";
+
+            if (!storeResult.IsNone)
+            {
+                name = storeResult.variableName + "=" + name;
+            }
+
+            return name;
+        }
+#endif
     }
 }

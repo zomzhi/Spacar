@@ -13,13 +13,15 @@ namespace MyCompany.MyGame.PathFinding
 		public Vector3 pathStart;
 		public Vector3 pathEnd;
 		public Action<Vector3[], bool> callback;
+		public float touchGroundHeight;
 
-		public PathRequest (LevelBridge _bridge, Vector3 _start, Vector3 _end, Action<Vector3[], bool> _callback)
+		public PathRequest (LevelBridge _bridge, Vector3 _start, Vector3 _end, Action<Vector3[], bool> _callback, float _touchGroundHeight = 0f)
 		{
 			bridge = _bridge;
 			pathStart = _start;
 			pathEnd = _end;
 			callback = _callback;
+			touchGroundHeight = _touchGroundHeight;
 		}
 	}
 
@@ -30,9 +32,9 @@ namespace MyCompany.MyGame.PathFinding
 
 		bool isProcessingPath;
 
-		public static void RequestPath (LevelBridge bridge, Vector3 pathStart, Vector3 pathEnd, Action<Vector3[], bool> callback)
+		public static void RequestPath (LevelBridge bridge, Vector3 pathStart, Vector3 pathEnd, Action<Vector3[], bool> callback, float touchGroundHeight)
 		{
-			PathRequest newRequest = new PathRequest (bridge, pathStart, pathEnd, callback);
+			PathRequest newRequest = new PathRequest (bridge, pathStart, pathEnd, callback, touchGroundHeight);
 			Instance.pathRequestQueue.Enqueue (newRequest);
 			Instance.TryProcessNext ();
 		}
@@ -147,14 +149,14 @@ namespace MyCompany.MyGame.PathFinding
 
 			for (int i = 1; i < path.Count; i++)
 			{
-//				Vector2 directionNew = new Vector2 (path [i - 1].coord.x - path [i].coord.x, path [i - 1].coord.y - path [i].coord.y);
-//				if (directionNew != directionOld)
+				Vector2 directionNew = new Vector2 (path [i - 1].coord.x - path [i].coord.x, path [i - 1].coord.y - path [i].coord.y);
+				if (directionNew != directionOld)
 				{
-					waypoints.Add (bridge.WorldPointFromNode (path [i - 1], 0f));
+					waypoints.Add (bridge.WorldPointFromNode (path [i - 1], request.touchGroundHeight));
 				}
-//				directionOld = directionNew;
+				directionOld = directionNew;
 			}
-			waypoints.Add (request.pathEnd);
+			waypoints.Add (request.bridge.ProjectToPlanePoint (request.pathEnd, request.touchGroundHeight));
 
 			// 选用真正的路径终点而不是终点所处格子的坐标
 //			waypoints.Add (request.pathEnd);

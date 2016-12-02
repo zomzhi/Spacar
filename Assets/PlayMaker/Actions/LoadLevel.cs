@@ -1,6 +1,6 @@
 // (c) Copyright HutongGames, LLC 2010-2013. All rights reserved.
 
-#if (UNITY_4_3 || UNITY_4_5 || UNITY_4_6 || UNITY_5_0 || UNITY_5_1 || UNITY_5_2)
+#if (UNITY_4_3 || UNITY_4_5 || UNITY_4_6 || UNITY_4_7 || UNITY_5_0 || UNITY_5_1 || UNITY_5_2)
 #define UNITY_PRE_5_3
 #endif
 
@@ -31,6 +31,9 @@ namespace HutongGames.PlayMaker.Actions
         [Tooltip("Keep this GameObject in the new level. NOTE: The GameObject and components is disabled then enabled on load; uncheck Reset On Disable to keep the active state.")]
         public FsmBool dontDestroyOnLoad;
 
+        [Tooltip("Event to send if the level cannot be loaded.")]
+        public FsmEvent failedEvent;
+
         private AsyncOperation asyncOperation;
 
         public override void Reset()
@@ -44,12 +47,17 @@ namespace HutongGames.PlayMaker.Actions
 
         public override void OnEnter()
         {
+            if (!Application.CanStreamedLevelBeLoaded(levelName.Value))
+            {
+                Fsm.Event(failedEvent);
+                Finish();
+                return;
+            }
+
             if (dontDestroyOnLoad.Value)
             {
                 // Have to get the root, since this FSM will be destroyed if a parent is destroyed.
-
                 var root = Owner.transform.root;
-
                 Object.DontDestroyOnLoad(root.gameObject);
             }
 
@@ -60,7 +68,7 @@ namespace HutongGames.PlayMaker.Actions
 #if UNITY_PRE_5_3
                     asyncOperation = Application.LoadLevelAdditiveAsync(levelName.Value);
 #else
-				    asyncOperation = SceneManager.LoadSceneAsync(levelName.Value);
+				    asyncOperation = SceneManager.LoadSceneAsync(levelName.Value, LoadSceneMode.Additive);
 #endif
 
                     Debug.Log("LoadLevelAdditiveAsyc: " + levelName.Value);
@@ -82,7 +90,7 @@ namespace HutongGames.PlayMaker.Actions
 #if UNITY_PRE_5_3
                     asyncOperation = Application.LoadLevelAsync(levelName.Value);
 #else
-                    asyncOperation = SceneManager.LoadSceneAsync(levelName.Value);
+                    asyncOperation = SceneManager.LoadSceneAsync(levelName.Value, LoadSceneMode.Single);
 #endif
                     Debug.Log("LoadLevelAsync: " + levelName.Value);
 
@@ -93,7 +101,7 @@ namespace HutongGames.PlayMaker.Actions
 #if UNITY_PRE_5_3
                     Application.LoadLevel(levelName.Value);
 #else
-                    SceneManager.LoadScene(levelName.Value);
+                    SceneManager.LoadScene(levelName.Value, LoadSceneMode.Single);
 #endif
                     Debug.Log("LoadLevel: " + levelName.Value);
                 }

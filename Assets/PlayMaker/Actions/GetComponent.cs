@@ -54,7 +54,7 @@ namespace HutongGames.PlayMaker.Actions
 			{
 				return;
 			}
-			
+
 			if (storeComponent.IsNone)
 			{
 				return;

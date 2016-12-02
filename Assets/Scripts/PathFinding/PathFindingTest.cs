@@ -33,7 +33,7 @@ public class PathFindingTest : MonoBehaviour
 	public void FindPath ()
 	{
 		if (initialized)
-			PathRequestManager.RequestPath (bridge, seeker.position, target.position, OnPathFound);
+			PathRequestManager.RequestPath (bridge, seeker.position, target.position, OnPathFound, 0f);
 	}
 
 	public void Reset (LevelBridge _bridge)

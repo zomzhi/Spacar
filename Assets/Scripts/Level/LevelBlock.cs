@@ -33,6 +33,7 @@ namespace MyCompany.MyGame.Level
 
 
 		private int startX = -1;
+
 		/// <summary>
 		/// 路径的初始点x坐标
 		/// </summary>
@@ -145,6 +146,11 @@ namespace MyCompany.MyGame.Level
 			float ratio = dist / (normalEndIndex - normalStartIndex + 1);
 			ratio = Mathf.Clamp01 (ratio);
 			return ratio;
+		}
+
+		public bool ValidNormalCoordinate (int x, int y)
+		{
+			return (x >= normalStartIndex && x <= normalEndIndex && y >= 0 && y < height);
 		}
 
 		#endregion

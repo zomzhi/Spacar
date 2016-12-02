@@ -5,7 +5,8 @@ using UnityEngine;
 namespace HutongGames.PlayMaker.Actions
 {
 	[ActionCategory(ActionCategory.GameObject)]
-	[Tooltip("Creates a Game Object, usually from a Prefab.")]
+    [ActionTarget(typeof(GameObject), "gameObject", true)]
+	[Tooltip("Creates a Game Object, usually using a Prefab.")]
 	public class CreateObject : FsmStateAction
 	{
 		[RequiredField]
