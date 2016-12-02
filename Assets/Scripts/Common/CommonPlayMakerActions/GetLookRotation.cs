@@ -15,20 +15,35 @@ namespace HutongGames.PlayMaker.Actions
 		[UIHint (UIHint.Variable)]
 		public FsmQuaternion rotation;
 
+		public bool everyFrame;
+
 		public override void Reset ()
 		{
 			lookAtDirection = null;
 			upDirection = null;
 			rotation = new FsmQuaternion (){ UseVariable = true };
+			everyFrame = false;
 		}
 
 		public override void OnEnter ()
+		{
+			GetRotation ();
+			if (!everyFrame)
+				Finish ();
+		}
+
+		public override void OnUpdate ()
+		{
+			if (everyFrame)
+				GetRotation ();
+		}
+
+		void GetRotation ()
 		{
 			if (upDirection.IsNone)
 				rotation.Value = Quaternion.LookRotation (lookAtDirection.Value);
 			else
 				rotation.Value = Quaternion.LookRotation (lookAtDirection.Value, upDirection.Value);
-			Finish ();
 		}
 	}
 }

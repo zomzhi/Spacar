@@ -1,6 +1,6 @@
 // (c) Copyright HutongGames, LLC 2010-2013. All rights reserved.
 
-#if (UNITY_4_3 || UNITY_4_5 || UNITY_4_6 || UNITY_5_0 || UNITY_5_1 || UNITY_5_2)
+#if (UNITY_4_3 || UNITY_4_5 || UNITY_4_6 || UNITY_4_7 || UNITY_5_0 || UNITY_5_1 || UNITY_5_2)
 #define UNITY_PRE_5_3
 #endif
 
@@ -29,6 +29,9 @@ namespace HutongGames.PlayMaker.Actions
         [Tooltip("Keep this GameObject in the new level. NOTE: The GameObject and components is disabled then enabled on load; uncheck Reset On Disable to keep the active state.")]
         public FsmBool dontDestroyOnLoad;
 
+        [Tooltip("Event to send if the level cannot be loaded.")]
+        public FsmEvent failedEvent;
+
         public override void Reset()
         {
             levelIndex = null;
@@ -39,10 +42,16 @@ namespace HutongGames.PlayMaker.Actions
 
         public override void OnEnter()
         {
+            if (!Application.CanStreamedLevelBeLoaded(levelIndex.Value))
+            {
+                Fsm.Event(failedEvent);
+                Finish();
+                return;
+            }
+
             if (dontDestroyOnLoad.Value)
             {
                 // Have to get the root, since this FSM will be destroyed if a parent is destroyed.
-
                 var root = Owner.transform.root;
                 Object.DontDestroyOnLoad(root.gameObject);
             }
@@ -60,7 +69,7 @@ namespace HutongGames.PlayMaker.Actions
 #if UNITY_PRE_5_3
                 Application.LoadLevel(levelIndex.Value);
 #else
-                SceneManager.LoadScene(levelIndex.Value);
+                SceneManager.LoadScene(levelIndex.Value, LoadSceneMode.Single);
 #endif
             }
 

@@ -1,5 +1,7 @@
 fileFormatVersion: 2
 guid: 3741839e25a749b4b96666c2d7d391b2
+timeCreated: 1469932921
+licenseType: Pro
 PluginImporter:
   serializedVersion: 1
   iconMap: {}
@@ -7,8 +9,16 @@ PluginImporter:
   isPreloaded: 0
   platformData:
     Any:
-      enabled: 1
+      enabled: 0
       settings: {}
+    Editor:
+      enabled: 0
+      settings:
+        DefaultValueInitialized: true
+    WindowsStoreApps:
+      enabled: 0
+      settings:
+        CPU: AnyCPU
   userData: 
   assetBundleName: 
   assetBundleVariant: 

@@ -6,7 +6,7 @@ using System.Collections;
 
 namespace HutongGames.PlayMakerEditor
 {
-    [CustomActionEditor(typeof (LookAt))]
+    [CustomActionEditor(typeof (HutongGames.PlayMaker.Actions.LookAt))]
     public class LookAtActionEditor : CustomActionEditor
     {
         public override bool OnGUI()
@@ -16,7 +16,7 @@ namespace HutongGames.PlayMakerEditor
 
         public override void OnSceneGUI()
         {
-            var lookAtAction = (LookAt) target;
+            var lookAtAction = (HutongGames.PlayMaker.Actions.LookAt)target;
 
             if (lookAtAction.UpdateLookAtPosition())
             {

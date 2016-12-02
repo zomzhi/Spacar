@@ -5,6 +5,7 @@ using PathologicalGames;
 using MyCompany.Common;
 using MyCompany.Common.Util;
 using MyCompany.Common.Interface;
+using System.Collections.Generic;
 
 namespace MyCompany.MyGame.Util
 {
@@ -43,6 +44,11 @@ namespace MyCompany.MyGame.Util
 			ELevelType[] avaliableTypes = GameDefine.CONNECTABLE_TYPE [(int)type];
 			int connectIndex = MathUtils.RandomBool () ? 0 : 1;
 			return avaliableTypes [connectIndex];
+		}
+
+		public static Vector3 GetConnectBridgeMiddlePos (LevelBridge bridge, LevelBridge connectBridge, float touchGroundHeight)
+		{
+			return bridge.WorldPointFromNode (bridge.GetConnectMiddleNode (connectBridge), touchGroundHeight);
 		}
 	}
 }

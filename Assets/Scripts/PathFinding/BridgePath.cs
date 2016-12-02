@@ -29,7 +29,7 @@ namespace MyCompany.MyGame.PathFinding
 			/// 是否是最后的目标点
 			/// </summary>
 			/// <value><c>true</c> if this instance is final destination; otherwise, <c>false</c>.</value>
-			public bool IsFinalDest{ get { return (index == path.Length); } }
+			public bool IsFinalDest{ get { return (index == path.Length - 1); } }
 
 			/// <summary>
 			/// 最终点的到达距离
@@ -38,25 +38,34 @@ namespace MyCompany.MyGame.PathFinding
 			public float ReachDistance{ get; private set; }
 
 			/// <summary>
+			/// 路径片段是否准备完毕，即路径是否请求并计算完毕
+			/// </summary>
+			/// <value><c>true</c> if ready; otherwise, <c>false</c>.</value>
+			public bool Ready{ get; private set; }
+
+			/// <summary>
 			/// 此片段路径是否走完
 			/// </summary>
 			/// <value><c>true</c> if finished; otherwise, <c>false</c>.</value>
 			public bool Finished{ get; private set; }
 
-			public PathSegment (Vector3[] _path, Action<Vector3> _onReachMiddlePoint, Action _onReachDestination, float _reachDistance = 0f)
+
+			public PathSegment (Action<Vector3> _onStart, Action<Vector3> _onReachMiddlePoint, Action _onReachDestination, float _reachDistance = 0f)
 			{
-				path = _path;
+				onStart = _onStart;
 				onReachMiddlePoint = _onReachMiddlePoint;
 				onReachDestination = _onReachDestination;
 				ReachDistance = _reachDistance;
 				reachDistSqr = ReachDistance * ReachDistance;
 				Finished = false;
+				Ready = false;
 				index = 0;
 			}
 
 			private Vector3[] path;
 			private Action<Vector3> onReachMiddlePoint;
 			private Action onReachDestination;
+			private Action<Vector3> onStart;
 
 			private int index;
 			private float reachDistSqr;
@@ -68,7 +77,10 @@ namespace MyCompany.MyGame.PathFinding
 
 				if (!IsFinalDest)
 				{
-					if (curPosition == CurDestPos)
+					// TODO: distance compare
+					float distSqr = (curPosition - CurDestPos).sqrMagnitude;
+					if (distSqr <= 0.1f)
+//					if (curPosition == CurDestPos)
 					{
 						MoveNext ();
 						if (onReachMiddlePoint != null)
@@ -83,6 +95,30 @@ namespace MyCompany.MyGame.PathFinding
 						if (onReachDestination != null)
 							onReachDestination ();
 						Finished = true;
+					}
+				}
+			}
+
+			public void SetPath (Vector3[] _path)
+			{
+				path = _path;
+				Ready = true;
+			}
+
+			public void PathBegin ()
+			{
+				onStart (path [0]);
+			}
+
+			public void OnDrawGizmos ()
+			{
+				Gizmos.color = Color.black;
+				for (int i = 0; i < path.Length; i++)
+				{
+					Gizmos.DrawCube (path [i], Vector3.one * 0.25f);
+					if (i > 0)
+					{
+						Gizmos.DrawLine (path [i - 1], path [i]);
 					}
 				}
 			}
@@ -106,6 +142,18 @@ namespace MyCompany.MyGame.PathFinding
 		/// <value>The type.</value>
 		public PathType Type{ get; private set; }
 
+
+		/// <summary>
+		/// 目的地
+		/// </summary>
+		public Vector3 destination;
+
+		/// <summary>
+		/// 所有片段路径均计算好后准备就绪
+		/// </summary>
+		/// <value><c>true</c> if ready; otherwise, <c>false</c>.</value>
+		public bool ready;
+
 		/// <summary>
 		/// 当前bridge路径是否走完
 		/// </summary>
@@ -121,6 +169,8 @@ namespace MyCompany.MyGame.PathFinding
 		{
 			bridge = _bridge;
 			Finished = false;
+			ready = false;
+			pathSegmentList = new Queue<PathSegment> ();
 		}
 
 		#endregion
@@ -152,11 +202,22 @@ namespace MyCompany.MyGame.PathFinding
 		public void InitializeToPosition (Vector3 position)
 		{
 			Type = PathType.ToPosition;
+			destination = position;
 		}
 
-		public void AddPathSegment (Vector3[] path, Action<Vector3> onReachMiddlePoint, Action onReachDestination, float reachDistance = 0f)
+		/// <summary>
+		/// 创建路径片段，路径片段在请求的路径计算完毕后才准备就绪
+		/// </summary>
+		/// <returns>The path segment.</returns>
+		/// <param name="onStart">On start.</param>
+		/// <param name="onReachMiddlePoint">On reach middle point.</param>
+		/// <param name="onReachDestination">On reach destination.</param>
+		/// <param name="reachDistance">Reach distance.</param>
+		public PathSegment CreatePathSegment (Action<Vector3> onStart, Action<Vector3> onReachMiddlePoint, Action onReachDestination, float reachDistance = 0.1f)
 		{
-			pathSegmentList.Enqueue (new PathSegment (path, onReachMiddlePoint, onReachDestination, reachDistance));
+			PathSegment ps = new PathSegment (onStart, onReachMiddlePoint, onReachDestination, reachDistance);
+			pathSegmentList.Enqueue (ps);
+			return ps;
 		}
 
 		public void Update (Vector3 curPosition)
@@ -164,11 +225,36 @@ namespace MyCompany.MyGame.PathFinding
 			if (Finished)
 				return;
 
-			if (curPathSegment == null || curPathSegment.Finished)
+			if (!ready)
 			{
 				if (pathSegmentList.Count > 0)
 				{
+					ready = true;
+					foreach (PathSegment segment in pathSegmentList)
+					{
+						if (!segment.Ready)
+						{
+							ready = false;
+							break;
+						}
+					}
+				}
+
+				if (!ready)
+					return;
+			}
+
+			if (curPathSegment == null || curPathSegment.Finished)
+			{
+				if (curPathSegment != null)
+				{
+					// TODO: dispose
+				}
+
+				if (pathSegmentList.Count > 0)
+				{
 					curPathSegment = pathSegmentList.Dequeue ();
+					curPathSegment.PathBegin ();
 				}
 				else
 				{
@@ -179,9 +265,22 @@ namespace MyCompany.MyGame.PathFinding
 			curPathSegment.Update (curPosition);
 		}
 
+		public void OnDrawGizmos ()
+		{
+			if (ready)
+			{
+				if (curPathSegment != null)
+					curPathSegment.OnDrawGizmos ();
+				foreach (PathSegment segment in pathSegmentList)
+				{
+					segment.OnDrawGizmos ();
+				}
+			}
+		}
+
 		public void Dispose ()
 		{
-			
+			// TOOD: dispose
 		}
 	}
 }

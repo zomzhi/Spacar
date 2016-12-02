@@ -8,6 +8,10 @@ namespace MyCompany.MyGame.PathFinding
 {
 	public class PathManager
 	{
+		/// <summary>
+		/// 当前是否正在寻路
+		/// </summary>
+		/// <value><c>true</c> if finished; otherwise, <c>false</c>.</value>
 		public bool Finished
 		{
 			get
@@ -17,6 +21,7 @@ namespace MyCompany.MyGame.PathFinding
 		}
 
 		private BridgePath currentBridgePath;
+
 		public BridgePath CurrentBridgePath{ get { return currentBridgePath; } }
 
 		private EnemyController controller;
@@ -27,13 +32,14 @@ namespace MyCompany.MyGame.PathFinding
 		{
 			controller = _controller;
 			destination = Vector3.zero;
+			bridgeSequence = new Queue<BridgePath> ();
 		}
 
 		public bool SetDestination (LevelBridge destBridge, Vector3 position)
 		{
 			bool success = destBridge.NodeFromWorldPoint (position).IsWalkable ();
 			if (success)
-			{
+			{						
 				destination = position;
 				success = DecomposeBridgePath (controller.currentBridge, destBridge);
 			}
@@ -45,14 +51,8 @@ namespace MyCompany.MyGame.PathFinding
 			if (Finished)
 				return;
 
-			if (currentBridgePath == null || currentBridgePath.Finished)
+			if (currentBridgePath == null/* || currentBridgePath.Finished*/)
 			{
-				if (currentBridgePath != null)
-				{
-					currentBridgePath.Dispose ();
-					currentBridgePath = null;
-				}
-
 				if (controller.CanProceedToNextDestination ())
 				{
 					currentBridgePath = bridgeSequence.Dequeue ();
@@ -61,12 +61,27 @@ namespace MyCompany.MyGame.PathFinding
 					else
 						currentBridgePath.InitializeToPosition (destination);
 
-					controller.SetupBridgePath (ref currentBridgePath);
+					controller.SetupBridgePath (currentBridgePath);
 				}
 			}
 
 			if (currentBridgePath != null)
+			{
 				currentBridgePath.Update (controller.Position);
+				if (currentBridgePath.Finished)
+				{
+					currentBridgePath.Dispose ();
+					currentBridgePath = null;
+				}
+			}
+		}
+
+		public void OnDrawGizmos ()
+		{
+			if (currentBridgePath != null)
+			{
+				currentBridgePath.OnDrawGizmos ();
+			}
 		}
 
 		#region Private Methods
@@ -82,7 +97,7 @@ namespace MyCompany.MyGame.PathFinding
 			if (currentBridge == null || destBridge == null)
 				return false;
 
-			bridgeSequence.Clear ();
+			ClearCurrentPath ();
 			List<LevelBridge> bridgeList = new List<LevelBridge> ();
 			LevelBridge p = destBridge;
 			while (p.prev != null && p != currentBridge)
@@ -104,6 +119,16 @@ namespace MyCompany.MyGame.PathFinding
 			p = null;
 			bridgeList = null;
 			return true;
+		}
+
+		void ClearCurrentPath ()
+		{
+			foreach (BridgePath bridgePath in bridgeSequence)
+			{
+				bridgePath.Dispose ();
+			}
+			bridgeSequence.Clear ();
+			currentBridgePath = null;
 		}
 
 		#endregion

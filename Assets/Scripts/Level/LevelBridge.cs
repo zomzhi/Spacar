@@ -78,8 +78,13 @@ namespace MyCompany.MyGame.Level
 
 		private List<ObstacleBase> obstacleList = new List<ObstacleBase> ();
 
+		private List<Coordinate> mainPathCoords = new List<Coordinate> ();
+
 		private GameObject blockHolder;
 		private GameObject obstaclesHolder;
+
+		private List<BridgeMap.Node> connectNodes_0;
+		private List<BridgeMap.Node> connectNodes_1;
 
 		#endregion
 
@@ -91,18 +96,22 @@ namespace MyCompany.MyGame.Level
 		#region Attribute
 
 		private GameObject m_bridgeGo;
+
 		public GameObject BridgeGo{ get { return m_bridgeGo; } set { m_bridgeGo = value; } }
 
 		private ELevelType m_levelType;
+
 		public ELevelType LevelType{ get { return m_levelType; } }
 
 		private int m_width;
+
 		public int width{ get { return m_width; } }
 
 		//		public int height{ get { return BlockCount * (int)GameDefine.BLOCK_HEIGHT_SPEC; } }
 		public int height{ get; private set; }
 
 		private int _blockCount;
+
 		public int BlockCount{ get { return _blockCount; } }
 
 		public Vector3 leftBottom
@@ -117,8 +126,11 @@ namespace MyCompany.MyGame.Level
 		}
 
 		public Vector3 Forward{ get { return GameDefine.LEVEL_DIRECTION [(int)m_levelType] [0]; } }
+
 		public Vector3 Right{ get { return GameDefine.LEVEL_DIRECTION [(int)m_levelType] [1]; } }
+
 		public Vector3 Up{ get { return GameDefine.LEVEL_DIRECTION [(int)m_levelType] [2]; } }
+
 		public Vector3 Down{ get { return -Up; } }
 
 		#endregion
@@ -197,7 +209,8 @@ namespace MyCompany.MyGame.Level
 			ClearObstacles ();
 			ObstacleFactory obstacleFactory = GameSystem.Instance.ObstaclesFactory;
 
-			List<Coordinate> obstacleCoords = Map.GenerateObstacleCoords (fillPercent);
+			bool isUpBridge = (LevelType == ELevelType.ALONG_Y_FACE_X || LevelType == ELevelType.ALONG_Y_FACE_Z);
+			List<Coordinate> obstacleCoords = Map.GenerateObstacleCoords (fillPercent, isUpBridge);
 			obstacleCoords.Sort ();
 
 			foreach (Coordinate coord in obstacleCoords)
@@ -429,6 +442,167 @@ namespace MyCompany.MyGame.Level
 			m_bridgeGo.transform.rotation = GameDefine.BLOCK_ROTATION [(int)LevelType];
 		}
 
+		private void FirstBlockReachableAreaCheck ()
+		{
+			Coordinate coord = Map.GetFirstPathCoordinate ();
+
+		}
+
+		/// <summary>
+		/// 得到与指定类型bridge连接最后一个block中能作为中间路径节点的所有节点
+		/// </summary>
+		/// <returns>The connect available nodes.</returns>
+		/// <param name="connectBridge">Connect bridge.</param>
+		private List<BridgeMap.Node> GetConnectAvailableNodes (LevelBridge connectBridge)
+		{
+			if (this.next0 != connectBridge && this.next1 != connectBridge)
+			{
+				UnityLog.LogError ("Connect bridge path is invalid.");
+				return null;
+			}
+
+			List<BridgeMap.Node> availableNodes = new List<BridgeMap.Node> ();
+			List<BridgeMap.Node> connectBridgeNodes = connectBridge.GetConnectableNodes ();
+			if (connectBridge.Forward == this.Right)
+			{
+				// turn right
+				foreach (BridgeMap.Node node in connectBridgeNodes)
+				{
+					int startY = this.height - 1 - node.coord.x;
+					for (int startX = this.width / 2; startX >= 0; startX--)
+//					for (int startX = this.width - 1; startX >= 0; startX--)
+					{
+						if (!this.Map.ValidX (startX) || !this.Map.ValidY (startY))
+						{
+							UnityLog.LogError ("Invalid coordinate during GetConnectBridgePath methods. " + startX + ", " + startY);
+							continue;
+						}
+
+						if (this.Map.IsWalkable (startX, startY) && IsReachableCoord (startX, startY))
+						{
+							availableNodes.Add (this.Map.GetNode (startX, startY));
+						}
+						else
+						{
+							break;
+						}
+					}
+				}
+			}
+			else if (connectBridge.Forward == -this.Right)
+			{
+				// turn left
+				foreach (BridgeMap.Node node in connectBridgeNodes)
+				{
+					int startY = height - connectBridge.width + node.coord.x;
+					for (int startX = 0; startX <= this.width / 2; startX++)
+//					for (int startX = 0; startX < this.width; startX++)
+					{
+						if (!this.Map.ValidX (startX) || !this.Map.ValidY (startY))
+						{
+							UnityLog.LogError ("Invalid coordinate during GetConnectBridgePath methods. " + startX + ", " + startY);
+							continue;
+						}
+
+						if (this.Map.IsWalkable (startX, startY) && IsReachableCoord (startX, startY))
+						{
+							availableNodes.Add (this.Map.GetNode (startX, startY));
+						}
+						else
+						{
+							break;
+						}
+					}
+				}
+			}
+			else if (connectBridge.Forward == this.Up)
+			{
+				// jump up
+				foreach (BridgeMap.Node node in connectBridgeNodes)
+				{
+					int startX = node.coord.x;
+					for (int startY = this.height - 1; startY >= this.height - this.LastBlock.height / 2; startY--)
+					{
+						if (!this.Map.ValidX (startX) || !this.Map.ValidY (startY))
+						{
+							UnityLog.LogError ("Invalid coordinate during GetConnectBridgePath methods. " + startX + ", " + startY);
+							continue;
+						}
+
+						if (this.Map.IsWalkable (startX, startY) && IsReachableCoord (startX, startY))
+						{
+							availableNodes.Add (this.Map.GetNode (startX, startY));
+						}
+						else
+						{
+							break;
+						}
+					}
+				}
+			}
+			else if (connectBridge.Up == this.Forward)
+			{
+				// exceed bridge
+				foreach (BridgeMap.Node node in connectBridgeNodes)
+				{
+					int startX = node.coord.x;
+					for (int startY = this.height - 1; startY >= this.height - this.LastBlock.height / 2; startY--)
+					{
+						if (!this.Map.ValidX (startX) || !this.Map.ValidY (startY))
+						{
+							UnityLog.LogError ("Invalid coordinate during GetConnectBridgePath methods. " + startX + ", " + startY);
+							continue;
+						}
+
+						if (this.Map.IsWalkable (startX, startY) && IsReachableCoord (startX, startY))
+						{
+							availableNodes.Add (this.Map.GetNode (startX, startY));
+						}
+						else
+						{
+							break;
+						}
+					}
+				}
+			}
+			else if (connectBridge.Up == -this.Right)
+			{
+				// turn exceed bridge
+				foreach (BridgeMap.Node node in connectBridgeNodes)
+				{
+					int startY = node.coord.x + this.height - connectBridge.width;
+					for (int startX = 0; startX <= this.width / 2; startX++)
+					{
+						if (!this.Map.ValidX (startX) || !this.Map.ValidY (startY))
+						{
+							UnityLog.LogError ("Invalid coordinate during GetConnectBridgePath methods. " + startX + ", " + startY);
+							continue;
+						}
+
+						if (this.Map.IsWalkable (startX, startY) && IsReachableCoord (startX, startY))
+						{
+							availableNodes.Add (this.Map.GetNode (startX, startY));
+						}
+						else
+						{
+							break;
+						}
+					}
+				}
+			}
+			else
+			{
+				throw new NotImplementedException ("GetConnectAvailableNodes is not implemented at this situation");
+			}
+
+			return availableNodes;
+		}
+
+		private bool IsReachableCoord (int x, int y)
+		{
+			return Map.IsReachableCoord (x, y, LastBlock);
+		}
+
 		#endregion
 
 		#region Util Methods
@@ -528,7 +702,7 @@ namespace MyCompany.MyGame.Level
 						offset.x = prevBridge.height;
 					else
 						UnityLog.LogError ("Bridge type " + curBridge.LevelType + " is  not connected to " + prevBridge.LevelType);
-				break;
+					break;
 
 				case ELevelType.ALONG_X_FACE_Z:
 					if (curBridge.LevelType == ELevelType.ALONG_Y_FACE_Z)
@@ -540,7 +714,7 @@ namespace MyCompany.MyGame.Level
 					}
 					else
 						UnityLog.LogError ("Bridge type " + curBridge.LevelType + " is  not connected to " + prevBridge.LevelType);
-				break;
+					break;
 
 				case ELevelType.ALONG_Y_FACE_X:
 					if (curBridge.LevelType == ELevelType.ALONG_X_FACE_Y)
@@ -549,7 +723,7 @@ namespace MyCompany.MyGame.Level
 						offset.y = prevBridge.height - curBridge.width;
 					else
 						UnityLog.LogError ("Bridge type " + curBridge.LevelType + " is  not connected to " + prevBridge.LevelType);
-				break;
+					break;
 
 				case ELevelType.ALONG_Y_FACE_Z:
 					if (curBridge.LevelType == ELevelType.ALONG_Z_FACE_Y)
@@ -561,7 +735,7 @@ namespace MyCompany.MyGame.Level
 					}
 					else
 						UnityLog.LogError ("Bridge type " + curBridge.LevelType + " is  not connected to " + prevBridge.LevelType);
-				break;
+					break;
 
 				case ELevelType.ALONG_Z_FACE_X:
 					if (curBridge.LevelType == ELevelType.ALONG_Y_FACE_X)
@@ -576,7 +750,7 @@ namespace MyCompany.MyGame.Level
 					}
 					else
 						UnityLog.LogError ("Bridge type " + curBridge.LevelType + " is  not connected to " + prevBridge.LevelType);
-				break;
+					break;
 
 				case ELevelType.ALONG_Z_FACE_Y:
 					if (curBridge.LevelType == ELevelType.ALONG_X_FACE_Y)
@@ -588,11 +762,11 @@ namespace MyCompany.MyGame.Level
 						offset.z = prevBridge.height + GameDefine.BLOCK_TALL;
 					else
 						UnityLog.LogError ("Bridge type " + curBridge.LevelType + " is  not connected to " + prevBridge.LevelType);
-				break;
+					break;
 
 				default:
 					throw new ArgumentException ("Prev bridge type " + prevBridge.LevelType + " is not implemented. wtf?");
-				break;
+					break;
 			}
 			return offset;
 		}
@@ -622,6 +796,11 @@ namespace MyCompany.MyGame.Level
 			return false;
 		}
 
+		/// <summary>
+		/// 世界坐标返回节点
+		/// </summary>
+		/// <returns>The from world point.</returns>
+		/// <param name="point">Point.</param>
 		public BridgeMap.Node NodeFromWorldPoint (Vector3 point)
 		{
 			Vector3 dir = point - leftBottom;
@@ -630,6 +809,12 @@ namespace MyCompany.MyGame.Level
 			return Map.GetCorrespondNode (h, v);
 		}
 
+		/// <summary>
+		/// 节点位置得到世界坐标
+		/// </summary>
+		/// <returns>The point from node.</returns>
+		/// <param name="node">Node.</param>
+		/// <param name="touchGroundHeight">Touch ground height.</param>
 		public Vector3 WorldPointFromNode (BridgeMap.Node node, float touchGroundHeight = 0f)
 		{
 			Vector3 result = leftBottom;
@@ -637,6 +822,87 @@ namespace MyCompany.MyGame.Level
 			result += Forward * (node.coord.y * 1f + 0.5f);
 			result += Up * (GameDefine.BLOCK_TALL + touchGroundHeight);
 			return result;
+		}
+
+		/// <summary>
+		/// 返回Bridge起始连接处能作为路径点的节点
+		/// </summary>
+		/// <returns>The connectable nodes.</returns>
+		public List<BridgeMap.Node> GetConnectableNodes ()
+		{
+			return Map.GetConnectableNodes (FirstBlock);
+		}
+
+		/// <summary>
+		/// 得到与指定bridge连接最后一个block中随机一个路径点
+		/// </summary>
+		/// <returns>The connect middle node.</returns>
+		/// <param name="connectBridge">Connect bridge.</param>
+		public BridgeMap.Node GetConnectMiddleNode (LevelBridge connectBridge)
+		{
+			if (next0 != connectBridge && next1 != connectBridge)
+			{
+				UnityLog.LogError ("connectbridge is not connected to current bridge.");
+				return null;
+			}
+
+			List<BridgeMap.Node> connectNodes;
+
+			if (connectBridge == this.next0)
+			{
+				if (connectNodes_0 == null)
+				{
+					connectNodes_0 = GetConnectAvailableNodes (connectBridge);
+				}
+				connectNodes = connectNodes_0;
+			}
+			else
+			{
+				if (connectNodes_1 == null)
+				{
+					connectNodes_1 = GetConnectAvailableNodes (connectBridge);
+				}
+				connectNodes = connectNodes_1;
+			}
+
+			return connectNodes [UnityEngine.Random.Range (0, connectNodes.Count)];
+		}
+
+		/// <summary>
+		/// 将坐标点截取到bridge平面内
+		/// </summary>
+		/// <returns>The point.</returns>
+		/// <param name="point">Point.</param>
+		public Vector3 ClampPoint (Vector3 point, float groundHeightOffset = 0f)
+		{
+			Vector3 clampPoint = point;
+			Vector3 relativeDir = point - this.leftBottom;
+			float xDist = Vector3.Dot (relativeDir, this.Right);
+			if (xDist < 0)
+			{
+				clampPoint += this.Right * (-xDist);
+			}
+			else if (xDist > this.width)
+			{
+				clampPoint += this.Right * (this.width - xDist);
+			}
+
+			float zDist = Vector3.Dot (relativeDir, this.Forward);
+			if (zDist < 0)
+			{
+				clampPoint += this.Forward * (-zDist);
+			}
+			else if (zDist > this.height)
+			{
+				clampPoint += this.Forward * (this.height - zDist);
+			}
+
+			float yDist = Vector3.Dot (relativeDir, this.Up);
+			if (yDist < ((float)GameDefine.BLOCK_TALL + groundHeightOffset))
+			{
+				clampPoint += this.Up * (-yDist + (float)GameDefine.BLOCK_TALL + groundHeightOffset);
+			}
+			return clampPoint;
 		}
 
 		#endregion

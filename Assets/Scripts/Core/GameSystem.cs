@@ -24,6 +24,7 @@ namespace MyCompany.MyGame
 		#region Attribute
 
 		private bool _paused;
+
 		public bool Paused
 		{
 			get{ return _paused; }
@@ -39,6 +40,7 @@ namespace MyCompany.MyGame
 		}
 
 		public LevelBlockFactory BlockFactory{ get; private set; }
+
 		public ObstacleFactory ObstaclesFactory{ get; private set; }
 
 		#endregion
@@ -140,7 +142,7 @@ namespace MyCompany.MyGame
 		IEnumerator LoadSplash ()
 		{
 			UnityLog.Log ("Start load splash");
-			yield return new WaitForSeconds (2f);
+			yield return null;
 			UnityLog.Log ("End load splash");
 		}
 

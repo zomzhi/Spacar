@@ -147,7 +147,7 @@ namespace MyCompany.MyGame.Level
 
 			public bool IsWalkable ()
 			{
-				return !IsObstacle ();
+				return !IsObstacle () && !IsBreakable ();
 			}
 
 			#endregion
@@ -165,7 +165,9 @@ namespace MyCompany.MyGame.Level
 		}
 
 		public int Width{ get; private set; }
+
 		public int Height{ get; private set; }
+
 		public int GridCount{ get { return Width * Height; } }
 
 		//		sbyte[,] map;
@@ -369,6 +371,18 @@ namespace MyCompany.MyGame.Level
 //			return (map [x, y] & (sbyte)EMapSign.Obstacle) > 0;
 //			return (mapGrid [x, y].sign & (sbyte)EMapSign.Obstacle) > 0;
 			return mapGrid [x, y].IsObstacle ();
+		}
+
+		public bool IsWalkable (Coordinate coord)
+		{
+			return IsWalkable (coord.x, coord.y);
+		}
+
+		public bool IsWalkable (int x, int y)
+		{
+			if (!ValidX (x) || !ValidY (y))
+				return false;
+			return mapGrid [x, y].IsWalkable ();
 		}
 
 		#endregion
@@ -681,6 +695,112 @@ namespace MyCompany.MyGame.Level
 			return true;
 		}
 
+		private List<Node> connectableNodes = null;
+
+		/// <summary>
+		/// 返回Bridge连接处能作为路径点的节点
+		/// </summary>
+		/// <returns>The connectable nodes.</returns>
+		public List<Node> GetConnectableNodes (LevelBlock firstBlock)
+		{
+			// caculate only once
+			if (connectableNodes == null)
+			{
+				Coordinate firstCoord = bridgePath [0];
+				if (firstBlock.ValidNormalCoordinate (firstCoord.x, firstCoord.y))
+				{
+					connectableNodes = new List<Node> ();
+
+					// 找到路径点可达的区域
+					List<Node> reachableArea = new List<Node> ();
+					List<Node> checkNodes = new List<Node> ();
+					checkNodes.Add (mapGrid [firstCoord.x, firstCoord.y]);
+					while (checkNodes.Count > 0)
+					{
+						Node node = checkNodes [0];
+						checkNodes.Remove (node);
+						reachableArea.Add (node);
+
+						// check neighbour
+						for (int x = -1; x <= 1; x++)
+						{
+							for (int y = -1; y <= 1; y++)
+							{
+								int newX = node.coord.x + x;
+								int newY = node.coord.y + y;
+								if (firstBlock.ValidNormalCoordinate (newX, newY) && !checkNodes.Contains (mapGrid [newX, newY]) && !reachableArea.Contains (mapGrid [newX, newY]) && mapGrid [newX, newY].IsWalkable ())
+								{
+									checkNodes.Add (mapGrid [newX, newY]);
+								}
+							}
+						}
+					}
+					// 设置固定y的可达节点列表
+					int startY = firstBlock.bridgeBelong.Forward == Vector3.up ? GameDefine.BLOCK_TALL : 0;
+					for (int startX = firstBlock.normalStartIndex; startX <= firstBlock.normalEndIndex; startX++)
+					{
+						if (reachableArea.Contains (mapGrid [startX, startY]))
+						{
+							connectableNodes.Add (mapGrid [startX, startY]);
+						}
+					}
+				}
+			}
+
+			return connectableNodes;
+		}
+
+		private List<Node> lastBlockReachableNodes;
+
+		/// <summary>
+		/// 检测某个末尾Block的node节点是否是可达的
+		/// </summary>
+		/// <returns><c>true</c> if this instance is reachable node the specified node; otherwise, <c>false</c>.</returns>
+		/// <param name="node">Node.</param>
+		public bool IsReachableCoord (int coordx, int coordy, LevelBlock lastBlock)
+		{
+			if (lastBlockReachableNodes == null)
+			{
+				Coordinate lastCoord = bridgePath [bridgePath.Count - 1];
+				int checkStartX = lastBlock.normalStartIndex;
+				int checkEndX = lastBlock.normalEndIndex;
+				int checkY = lastBlock.bridgeBelong.height - lastBlock.height - 1;
+
+				if (!lastBlock.ValidNormalCoordinate (lastCoord.x, lastCoord.y - (lastBlock.bridgeBelong.height - lastBlock.height)))
+				{
+					UnityLog.LogError ("Last path coordinate is not belong last block. pls check. " + lastCoord.ToString ());
+					return false;
+				}
+
+				// 找到路径点最后一个节点的所有在lastBlock范围内的可达节点
+				lastBlockReachableNodes = new List<Node> ();
+				List<Node> checkNodes = new List<Node> ();
+				checkNodes.Add (mapGrid [lastCoord.x, lastCoord.y]);
+				while (checkNodes.Count > 0)
+				{
+					Node checkNode = checkNodes [0];
+					lastBlockReachableNodes.Add (checkNode);
+					checkNodes.Remove (checkNode);
+
+					for (int x = -1; x <= 1; x++)
+					{
+						for (int y = -1; y <= 1; y++)
+						{
+							int newX = checkNode.coord.x + x;
+							int newY = checkNode.coord.y + y;
+							if (newX >= checkStartX && newX <= checkEndX && newY > checkY && newY < Height)
+							{
+								if (!checkNodes.Contains (mapGrid [newX, newY]) && !lastBlockReachableNodes.Contains (mapGrid [newX, newY]) && mapGrid [newX, newY].IsWalkable ())
+									checkNodes.Add (mapGrid [newX, newY]);
+							}
+						}
+					}
+				}
+			}
+
+			return lastBlockReachableNodes.Contains (mapGrid [coordx, coordy]);
+		}
+
 		#endregion
 
 		#region Obstacle Utils
@@ -690,14 +810,15 @@ namespace MyCompany.MyGame.Level
 		/// </summary>
 		/// <returns>The obstacle coords.</returns>
 		/// <param name="fillPercent">Fill percent.</param>
-		public List<Coordinate> GenerateObstacleCoords (int fillPercent)
+		public List<Coordinate> GenerateObstacleCoords (int fillPercent, bool isUpBridge = false)
 		{
 			List<Coordinate> obstacleCoords = new List<Coordinate> ();
 			fillPercent = Mathf.Clamp (fillPercent, 0, 100);
+			int startY = isUpBridge ? 10 : 0;		// TODO: magic number
 			// TODO: Should we fill placeable coordinates instead of the whole bridge?
 			for (int x = 0; x < Width; x++)
 			{
-				for (int y = 0; y < Height; y++)
+				for (int y = startY; y < Height; y++)
 				{
 					ResetGridNode (x, y);
 					if (IsPlaceable (x, y))
@@ -822,6 +943,11 @@ namespace MyCompany.MyGame.Level
 			}
 		}
 
+		public Coordinate GetFirstPathCoordinate ()
+		{
+			return bridgePath [0];
+		}
+
 		#endregion
 
 		#region Private Methods
@@ -839,6 +965,17 @@ namespace MyCompany.MyGame.Level
 		{
 			mapGrid [x, y].sign &= ~(sbyte)EMapSign.Obstacle;
 			mapGrid [x, y].Penalty = -1;
+		}
+
+		#endregion
+
+		#region Public Methods
+
+		public Node GetNode (int x, int y)
+		{
+			if (ValidX (x) && ValidY (y))
+				return mapGrid [x, y];
+			return null;
 		}
 
 		#endregion

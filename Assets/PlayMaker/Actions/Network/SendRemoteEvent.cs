@@ -2,7 +2,7 @@
 
 // Unity 5.1 introduced a new networking library. 
 // Unless we define PLAYMAKER_LEGACY_NETWORK old network actions are disabled
-#if !(UNITY_4_3 || UNITY_4_5 || UNITY_4_6 || UNITY_5_0 || PLAYMAKER_LEGACY_NETWORK)
+#if !(UNITY_4_3 || UNITY_4_5 || UNITY_4_6 || UNITY_4_7 || UNITY_5_0 || PLAYMAKER_LEGACY_NETWORK)
 #define UNITY_NEW_NETWORK
 #endif
 
