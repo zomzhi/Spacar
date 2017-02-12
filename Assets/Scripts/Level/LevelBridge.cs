@@ -210,7 +210,8 @@ namespace MyCompany.MyGame.Level
 			ObstacleFactory obstacleFactory = GameSystem.Instance.ObstaclesFactory;
 
 			bool isUpBridge = (LevelType == ELevelType.ALONG_Y_FACE_X || LevelType == ELevelType.ALONG_Y_FACE_Z);
-			List<Coordinate> obstacleCoords = Map.GenerateObstacleCoords (fillPercent, isUpBridge);
+//			List<Coordinate> obstacleCoords = Map.GenerateObstacleCoords (fillPercent, isUpBridge);
+			List<Coordinate> obstacleCoords = Map.GenerateObstacleCoordsByCount (fillPercent, isUpBridge);
 			obstacleCoords.Sort ();
 
 			foreach (Coordinate coord in obstacleCoords)
@@ -236,6 +237,7 @@ namespace MyCompany.MyGame.Level
 				Map.MarkObstacleArea (coord, obstacle.width, obstacle.height);
 			}
 
+			/*
 			// 过滤掉面积较小且孤立的障碍
 			List<ObstacleBase> removeObstacles = new List<ObstacleBase> ();
 			foreach (ObstacleBase obstacle in obstacleList)
@@ -255,6 +257,7 @@ namespace MyCompany.MyGame.Level
 				obstacleList.Remove (obstacle);
 				GameSystem.Instance.ObstaclesFactory.CollectObstacle (obstacle);
 			}
+			*/
 
 			// 放置
 			foreach (ObstacleBase obstacle in obstacleList)
@@ -285,29 +288,57 @@ namespace MyCompany.MyGame.Level
 
 
 			int buildHeight = 0;
-			for (int i = 0; i < BlockCount; i++)
+			Transform blockTrans;
+			for (int i = 0; i < BlockCount - 1; i++)
 			{
-				Transform blockTrans = GameSystem.Instance.BlockFactory.GetBlockByWidth (width);
+				blockTrans = GameSystem.Instance.BlockFactory.GetBlockByWidth (width);
 				if (blockTrans == null)
 				{
 					UnityLog.LogError ("Can not get block prefab by width " + width);
 					return;
 				}
-				LevelBlock lb = blockTrans.GetComponent<LevelBlock> ();
-				if (lb != null)
-				{
-					lb.bridgeBelong = this;
-					blockTrans.SetParent (blockHolder.transform);
-					blockTrans.localPosition = new Vector3 (buildHeight, 0f, 0f);
-					blockTrans.localRotation = Quaternion.identity;
-					blockTrans.localScale = Vector3.one;
-					buildHeight += lb.height;
-				}
-				blockList.Add (lb);
+				AppendBlock (ref buildHeight, blockTrans);
 			}
+
+			// add last block by turn type
+			blockTrans = null;
+			if (next != null && (next.Forward == -this.Right || next.Forward == this.Right
+			    || next.Up == -this.Right || next.Up == this.Right))
+			{
+				blockTrans = GameSystem.Instance.BlockFactory.GetBlockByWidth (width, LevelBlock.EConnectType.StraightClose);
+				if (blockTrans == null)
+					UnityLog.LogError ("Missing LevelBlock width: " + width + " turn type: left");
+			}
+
+			if (blockTrans == null)
+			{
+				blockTrans = GameSystem.Instance.BlockFactory.GetBlockByWidth (width, LevelBlock.EConnectType.StraightClose);
+				if (blockTrans == null)
+				{
+					UnityLog.LogError ("Can not get block prefab by width " + width);
+					return;
+				}
+			}
+			AppendBlock (ref buildHeight, blockTrans);
+
 			height = buildHeight;
 
 			GenerateBridgeMap ();
+		}
+
+		private void AppendBlock (ref int buildHeight, Transform blockTrans)
+		{
+			LevelBlock lb = blockTrans.GetComponent<LevelBlock> ();
+			if (lb != null)
+			{
+				lb.bridgeBelong = this;
+				blockTrans.SetParent (blockHolder.transform);
+				blockTrans.localPosition = new Vector3 (buildHeight, 0f, 0f);
+				blockTrans.localRotation = Quaternion.identity;
+				blockTrans.localScale = Vector3.one;
+				buildHeight += lb.height;
+			}
+			blockList.Add (lb);
 		}
 
 		/// <summary>

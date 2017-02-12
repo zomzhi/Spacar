@@ -835,6 +835,38 @@ namespace MyCompany.MyGame.Level
 		}
 
 		/// <summary>
+		/// 根据数量生成障碍坐标
+		/// </summary>
+		/// <returns>The obstacle coords by count.</returns>
+		/// <param name="count">Count.</param>
+		/// <param name="isUpBridge">If set to <c>true</c> is up bridge.</param>
+		public List<Coordinate> GenerateObstacleCoordsByCount (int count, bool isUpBridge = false)
+		{
+			List<Node> placeableNodes = new List<Node> ();
+			List<Coordinate> obstacleCoords = new List<Coordinate> ();
+			int startY = isUpBridge ? 10 : 0;		// TODO: magic number
+			for (int x = 0; x < Width; x++)
+			{
+				for (int y = startY; y < Height; y++)
+				{
+					ResetGridNode (x, y);
+					if (IsPlaceable (x, y))
+					{
+						placeableNodes.Add (mapGrid [x, y]);
+					}
+				}
+			}
+			count = Mathf.Clamp (count, 0, placeableNodes.Count);
+			for (int i = 0; i < count; i++)
+			{
+				Node node = placeableNodes [UnityEngine.Random.Range (0, placeableNodes.Count)];
+				obstacleCoords.Add (node.coord);
+				placeableNodes.Remove (node);
+			}
+			return obstacleCoords;
+		}
+
+		/// <summary>
 		/// 检查区域是否孤立，即周围是否与障碍相连
 		/// </summary>
 		/// <returns><c>true</c> if this instance is isolate area the specified coord width height; otherwise, <c>false</c>.</returns>

@@ -27,6 +27,8 @@ public class LevelBlockInspector : Editor
 		EditorGUILayout.PropertyField (specificWidthProp);
 		specificWidthProp = serializedObject.FindProperty ("preloadFrames");
 		EditorGUILayout.PropertyField (specificWidthProp);
+		specificWidthProp = serializedObject.FindProperty ("connectType");
+		EditorGUILayout.PropertyField (specificWidthProp);
 
 		serializedObject.ApplyModifiedProperties ();
 
@@ -40,6 +42,9 @@ public class LevelBlockInspector : Editor
 
 	void OnSceneGUI ()
 	{
+		if (!levelBlock.viewMapGrid)
+			return;
+
 		for (int x = 0; x < levelBlock.width; x++)
 		{
 			for (int y = 0; y < levelBlock.height; y++)

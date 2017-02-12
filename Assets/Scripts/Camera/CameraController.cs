@@ -126,10 +126,14 @@ namespace MyCompany.MyGame.CameraControl
 			if (currentLevelBridge == null || GameSystem.Instance.Paused)
 				return;
 
-			if (manuallyControl && Application.platform == RuntimePlatform.WindowsEditor)
+			#if UNITY_EDITOR
+			if (manuallyControl)
 				UpdatePosRot (manualHRatio, manualVRatio);
 			else
 				UpdatePosRot (horizonRatio, verticalRatio);
+			#else
+			UpdatePosRot(horizonRatio, verticalRatio);
+			#endif
 		}
 
 		void UpdatePosRot (float hRatio, float vRatio)

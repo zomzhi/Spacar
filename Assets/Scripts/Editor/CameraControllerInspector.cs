@@ -37,6 +37,7 @@ public class CameraControllerInspector : Editor
 		}
 		EditorGUILayout.EndHorizontal ();
 
+
 		EditorGUILayout.BeginVertical ();
 		GUILayout.Space (10f);
 		for (int i = 0; i < cameraController.parameters.Length; i++)
@@ -45,6 +46,8 @@ public class CameraControllerInspector : Editor
 			showExtraFields [i].target = EditorGUILayout.ToggleLeft (cameraController.parameters [i].name, showExtraFields [i].target);
 			if (EditorGUILayout.BeginFadeGroup (showExtraFields [i].faded))
 			{
+
+				EditorGUI.BeginChangeCheck ();
 				GUILayout.Space (10f);
 				EditorGUILayout.LabelField ("X angle coefficent: ");
 				EditorGUI.indentLevel++;
@@ -86,10 +89,17 @@ public class CameraControllerInspector : Editor
 //				EditorGUILayout.EndHorizontal ();
 				EditorGUI.indentLevel--;
 
+
+				if (EditorGUI.EndChangeCheck ())
+				{
+					Debug.Log ("Changed");
+					Undo.RecordObject (target, "Cam Param Changed");
+				}
 			}
 			EditorGUILayout.EndFadeGroup ();
 		}
 		EditorGUILayout.EndVertical ();
+
 	}
 }
 

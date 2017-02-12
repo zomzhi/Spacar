@@ -76,7 +76,7 @@ namespace MyCompany.MyGame.Level
 			}
 		}
 
-		public Transform GetBlockByWidth (int width)
+		public Transform GetBlockByWidth (int width, LevelBlock.EConnectType connectType = LevelBlock.EConnectType.NotSpecific)
 		{
 			GameObject prefab;
 			BlockPrefabList prefabList = GetPrefabListByWidth (width);
@@ -88,7 +88,28 @@ namespace MyCompany.MyGame.Level
 			if (prefabList.sameWidthBlockPrefabs != null && prefabList.sameWidthBlockPrefabs.Count > 0)
 			{
 				int count = prefabList.sameWidthBlockPrefabs.Count;
-				prefab = prefabList.sameWidthBlockPrefabs [UnityEngine.Random.Range (0, count)].prefab;
+				if (connectType == LevelBlock.EConnectType.NotSpecific)
+				{
+					List<BlockPrefab> findBlockPrefabs = prefabList.sameWidthBlockPrefabs.FindAll ((findblockPrefab) => {
+						return findblockPrefab.levelBlock.connectType == LevelBlock.EConnectType.Straight;
+					});
+					prefab = findBlockPrefabs [UnityEngine.Random.Range (0, findBlockPrefabs.Count)].prefab;
+				}
+				else
+				{
+					BlockPrefab bp = prefabList.sameWidthBlockPrefabs.Find ((findBlockPrefab) => {
+						return findBlockPrefab.levelBlock.connectType == connectType;
+					});
+					if (bp != null)
+					{
+						prefab = bp.prefab;
+					}
+					else
+					{
+						UnityLog.LogError (" LevelBlock with connect type: " + connectType + " width: " + width + " is not exist!");
+						return null;
+					}
+				}
 			}
 			else
 			{

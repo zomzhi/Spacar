@@ -9,6 +9,7 @@ using MyCompany.MyGame.Level;
 using MyCompany.MyGame.Obstacle;
 using UnityEngine.SceneManagement;
 using MyCompany.MyGame.UI;
+using MyCompany.MyGame.Audio;
 
 namespace MyCompany.MyGame
 {
@@ -43,6 +44,8 @@ namespace MyCompany.MyGame
 
 		public ObstacleFactory ObstaclesFactory{ get; private set; }
 
+		public AudioManager AudioMgr{ get; private set; }
+
 		#endregion
 
 		#region Private Member
@@ -61,6 +64,9 @@ namespace MyCompany.MyGame
 		{
 			DontDestroyOnLoad (gameObject);
 			UnityLog.logMessage = logMessage;
+
+			AudioMgr = GetComponentInChildren<AudioManager> ();
+			UnityLog.Assert (AudioMgr != null, "Missing audio manager!", this.gameObject);
 		}
 
 		IEnumerator Start ()

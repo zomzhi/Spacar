@@ -9,7 +9,6 @@ public class UtilMenuItemEditor
 	[MenuItem ("MyGame/Set obstacle width height")]
 	static void SetObstacleWidthHeight ()
 	{
-		Debug.Log ("WTF?");
 		string obstalcePrefabPath = GameDefine.RESOURCE_FOLDER + GameDefine.OBSTACLE_PREFAB_RESOURCE_PATH;
 		string[] prefabsPath = Directory.GetFiles (obstalcePrefabPath, "*" + GameDefine.PREFAB_EXTENSION);
 		foreach (string path in prefabsPath)

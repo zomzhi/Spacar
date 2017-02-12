@@ -99,6 +99,10 @@ namespace MyCompany.MyGame
 			METER_15 = 15,
 			METER_18 = 18,
 			METER_20 = 20,
+			METER_25 = 25,
+			METER_30 = 30,
+			METER_35 = 35,
+			METER_40 = 40,
 		}
 
 		/// <summary>

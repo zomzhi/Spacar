@@ -82,12 +82,19 @@ namespace MyCompany.MyGame.Level
 				ELevelType[] avaliableTypes = GameDefine.CONNECTABLE_TYPE [(int)path.tail.LevelType];
 				int connectIndex = MathUtils.RandomBool () ? 0 : 1;
 
-				LevelBridge newBridge = new LevelBridge (avaliableTypes [connectIndex], Random.Range (5, 10), (int)GameDefine.BLOCK_SPECIFICATION.METER_20);
+				LevelBridge newBridge = GetLevelBridge (avaliableTypes [connectIndex], Random.Range (5, 10), (int)GameDefine.BLOCK_SPECIFICATION.METER_30);
 				if (connectIndex == 0)
 					path.AppendLeft (newBridge, true);
 				else
 					path.AppendRight (newBridge, true);
 			}
+		}
+
+		LevelBridge GetLevelBridge (ELevelType type, int blockCount, int bridgeWidth, int fillPercent = 5)
+		{
+			LevelBridge newBridge = new LevelBridge (type, blockCount, bridgeWidth);
+			newBridge.fillPercent = fillPercent;
+			return newBridge;
 		}
 
 		#endregion
@@ -128,7 +135,7 @@ namespace MyCompany.MyGame.Level
 				connectIndex = MathUtils.RandomBool () ? 0 : 1;
 
 				ELevelType firstType = avaliableTypes [connectIndex];
-				firstBridge = new LevelBridge (firstType, Random.Range (5, 10), (int)GameDefine.BLOCK_SPECIFICATION.METER_20);
+				firstBridge = GetLevelBridge (firstType, Random.Range (5, 10), (int)GameDefine.BLOCK_SPECIFICATION.METER_30);
 				firstBridge.prev = connectBridge;
 			}
 			else
@@ -159,7 +166,7 @@ namespace MyCompany.MyGame.Level
 				ELevelType[] avaliableTypes = GameDefine.CONNECTABLE_TYPE [(int)path.tail.LevelType];
 				int connectIndex = MathUtils.RandomBool () ? 0 : 1;
 
-				LevelBridge newBridge = new LevelBridge (avaliableTypes [connectIndex], Random.Range (5, 10), (int)GameDefine.BLOCK_SPECIFICATION.METER_20);
+				LevelBridge newBridge = GetLevelBridge (avaliableTypes [connectIndex], Random.Range (5, 10), (int)GameDefine.BLOCK_SPECIFICATION.METER_30);
 				if (connectIndex == 0)
 					path.AppendLeft (newBridge, true);
 				else
@@ -196,7 +203,8 @@ namespace MyCompany.MyGame.Level
 		{
 			LevelBridge firstBridge = new LevelBridge (ELevelType.ALONG_X_FACE_Y, 
 				                          GameDefine.DEFAULT_FIRST_BRIDGE_BLOCK_COUNT, 
-				                          (int)GameDefine.BLOCK_SPECIFICATION.METER_20);	
+				                          (int)GameDefine.BLOCK_SPECIFICATION.METER_30);	
+			firstBridge.fillPercent = 3;
 			return firstBridge;
 		}
 

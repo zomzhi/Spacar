@@ -13,6 +13,13 @@ namespace MyCompany.MyGame.Level
 	{
 		#region public member
 
+		public enum EConnectType
+		{
+			NotSpecific,
+			Straight,
+			StraightClose,
+		}
+
 		// Block会从左至右或从右至左断裂，normalStartIndex标示不会断裂block的起始索引
 		public int normalStartIndex;
 		// Block会从左至右或从右至左断裂，normalEndIndex标示不会断裂block的终止索引
@@ -20,7 +27,9 @@ namespace MyCompany.MyGame.Level
 		// 断裂的block是否可放置物体
 		public bool placeable = false;
 
+		public bool viewMapGrid = false;
 
+		public EConnectType connectType = EConnectType.Straight;
 
 		[HideInInspector]
 		public ELevelType blockType;

@@ -14,6 +14,7 @@ namespace MyCompany.MyGame
 		#region Public Member
 
 		public TextAsset firstLevelAsset;
+		public AudioClip mainTheme;
 		public CameraController camController;
 		public Transform playerStartPoint;
 
@@ -275,14 +276,20 @@ namespace MyCompany.MyGame
 				enemyController.Initialize (dummyBridge.next, dummyBridge.next.leftBottom);
 			}
 			initialized = true;
+
+			GameSystem.Instance.AudioMgr.PlayMusic (mainTheme, 2f);
 		}
 
 		public void StartPlay ()
 		{
+			if (startPlay)
+				return;
+
 			if (!initialized)
 				StartGenerate ();
 			startPlay = true;
 			playerController.StartRun (dummyBridge);
+//			GameSystem.Instance.AudioMgr.PlayMusic (mainTheme, 2f);
 		}
 
 		#endregion
