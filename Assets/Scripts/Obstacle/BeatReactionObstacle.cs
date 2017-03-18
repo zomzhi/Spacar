@@ -299,7 +299,7 @@ namespace MyCompany.MyGame.Obstacle
 
 		void OnDestroy ()
 		{
-//			beatDetection.CallBackFunction -= OnBeatEvent;
+			beatDetection.CallBackFunction -= OnBeatEvent;
 		}
 
 		/// <summary>

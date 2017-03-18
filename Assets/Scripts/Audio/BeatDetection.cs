@@ -42,6 +42,10 @@ namespace MyCompany.MyGame.Audio
 
 		public CallbackEventHandler CallBackFunction;
 
+		public delegate void FFTCallbackHandler (float[] fft, float[] fft_history, int numSample);
+
+		public FFTCallbackHandler FFTCallbackFunction;
+
 		public beatmode beatMode;
 
 		private const int numSamples = 1024;
@@ -167,6 +171,13 @@ namespace MyCompany.MyGame.Audio
 			audioSource.GetSpectrumData (spectrum1, 1, FFTWindow.BlackmanHarris);
 			audioSource.GetOutputData (frames0, 0);
 			audioSource.GetOutputData (frames1, 1);
+
+			if (FFTCallbackFunction != null)
+			{
+				FFTCallbackFunction (spectrum0, spectrum0_history, numSamples);
+			}
+
+			System.Array.Copy (spectrum0, spectrum0_history, numSamples);
 
 			beatType energy = beatType.None;
 			switch (beatMode)

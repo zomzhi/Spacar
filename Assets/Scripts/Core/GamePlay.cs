@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿
+using UnityEngine;
 using System.Collections;
 using MyCompany.MyGame.Level;
 using MyCompany.MyGame.Player;
@@ -6,6 +7,8 @@ using MyCompany.MyGame.CameraControl;
 using Newtonsoft.Json;
 using MyCompany.Common.Signal;
 using MyCompany.MyGame.NPC;
+using MyCompany.MyGame.Audio;
+using DG.Tweening;
 
 namespace MyCompany.MyGame
 {
@@ -14,9 +17,16 @@ namespace MyCompany.MyGame
 		#region Public Member
 
 		public TextAsset firstLevelAsset;
+		public Material groundBrightMat;
+		[Range (0, 1024)]
+		public int sampleIndex = 0;
+		public float fftScale = 30f;
 		public AudioClip mainTheme;
 		public CameraController camController;
 		public Transform playerStartPoint;
+
+		public GameObject startPlayIcon;
+		public GameObject restartIcon;
 
 		public GameObject firstBridgeGo;
 		public ELevelType firstBridgeType;
@@ -39,6 +49,10 @@ namespace MyCompany.MyGame
 		private LevelBridge curBridge;
 		//		private LevelBridge nextBridge;
 
+		private Sequence groundBrightMatSeq;
+
+		SwipeGesture swipeGesture;
+
 		int groundLayerMask;
 		bool initialized = false;
 
@@ -53,6 +67,8 @@ namespace MyCompany.MyGame
 			UnityLog.Assert ((playerStartPoint != null), "Missing player start transform");
 			dummyBridge = new LevelBridge (firstBridgeType, firstBridgeBlockCount, (int)firstBridgeWidth, true);
 			dummyBridge.BridgeGo = firstBridgeGo;
+
+			swipeGesture = GetComponent<SwipeGesture> ();
 		}
 
 		void Start ()
@@ -65,6 +81,15 @@ namespace MyCompany.MyGame
 			playerController = GameObject.Instantiate (playerPrefab).GetComponent<PlayerController> ();
 			playerController.transform.position = playerStartPoint.position;
 			playerController.transform.rotation = playerStartPoint.rotation;
+
+			swipeGesture.targetMessageObjects = new GameObject[1];
+			swipeGesture.targetMessageObjects [0] = playerController.gameObject;
+		}
+
+		void OnDestroy ()
+		{
+			if (GameSystem.Instance != null)
+				GameSystem.Instance.AudioMgr.beatDetection.CallBackFunction -= OnBeatEvent;
 		}
 
 		void Update ()
@@ -84,6 +109,8 @@ namespace MyCompany.MyGame
 			if (curBridge.BelowBridge (playerController.Position))
 			{
 				// 比当前bridge平面低，失败
+//				GameSystem.Instance.ReloadScene ();
+				restartIcon.SetActive (true);
 				return;
 			}
 
@@ -250,6 +277,29 @@ namespace MyCompany.MyGame
 			camController.UpdateCamera (playerController.currentBridge, hRatio, vRatio);
 		}
 
+		private void GroundBrightMatControll (float[] fft, float[] fft_history, int numSample)
+		{
+			float emissionGain = (fft [sampleIndex] + fft_history [sampleIndex]) * 0.5f * fftScale;
+			emissionGain = Mathf.Clamp (emissionGain, 0f, 0.47f);
+			groundBrightMat.SetFloat ("_EmissionGain", emissionGain);
+			Debug.LogError (emissionGain);
+		}
+
+		private void OnBeatEvent (BeatDetection.EventInfo info)
+		{
+			if (groundBrightMatSeq != null)
+			{
+				groundBrightMatSeq.Restart ();
+			}
+			else
+			{
+				groundBrightMatSeq = DOTween.Sequence ();
+				groundBrightMatSeq.Append (groundBrightMat.DOFloat (0.47f, "_EmissionGain", 0.2f));
+				groundBrightMatSeq.Append (groundBrightMat.DOFloat (0.3f, "_EmissionGain", 0.5f));
+				groundBrightMatSeq.SetAutoKill (false);
+			}
+		}
+
 		#region Util Methods
 
 		public void StartGenerate ()
@@ -278,6 +328,9 @@ namespace MyCompany.MyGame
 			initialized = true;
 
 			GameSystem.Instance.AudioMgr.PlayMusic (mainTheme, 2f);
+
+//			GameSystem.Instance.AudioMgr.beatDetection.FFTCallbackFunction += GroundBrightMatControll;
+			GameSystem.Instance.AudioMgr.beatDetection.CallBackFunction += OnBeatEvent;
 		}
 
 		public void StartPlay ()
@@ -288,8 +341,15 @@ namespace MyCompany.MyGame
 			if (!initialized)
 				StartGenerate ();
 			startPlay = true;
+			startPlayIcon.SetActive (false);
 			playerController.StartRun (dummyBridge);
 //			GameSystem.Instance.AudioMgr.PlayMusic (mainTheme, 2f);
+
+		}
+
+		public void RePlay ()
+		{
+			GameSystem.Instance.ReloadScene ();
 		}
 
 		#endregion

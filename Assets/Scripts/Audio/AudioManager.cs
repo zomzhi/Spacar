@@ -68,6 +68,11 @@ namespace MyCompany.MyGame.Audio
 			StartCoroutine (AnimateMusicCrossfade (fadeDuration));
 		}
 
+		public void StopPlayMusic ()
+		{
+			musicSources [activeMusicSourceIndex].Stop ();
+		}
+
 		public void PlaySound (AudioClip clip, Vector3 pos)
 		{
 			if (clip != null)

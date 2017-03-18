@@ -4,6 +4,7 @@ using HutongGames.PlayMaker;
 using MyCompany.MyGame.Data.Character;
 using MyCompany.MyGame.Level;
 using MyCompany.Common.Signal;
+using MyCompany.Common.Input;
 
 namespace MyCompany.MyGame.Player
 {
@@ -139,7 +140,7 @@ namespace MyCompany.MyGame.Player
 		{
 
 		}
-			
+
 		void OnDestroy ()
 		{
 			SignalMgr.instance.Unsubscribe (GAME_EVT.ON_PLAYER_SWITCH_BRIDGE, (funsig<LevelBridge, LevelBridge>)OnSwitchBridge);
@@ -153,7 +154,30 @@ namespace MyCompany.MyGame.Player
 
 		void GestureSwipe (SwipeGesture gesture)
 		{
-			Debug.Log ("SwipeGesture  swipe happened " + gesture.swipeDirection + " went from " + gesture.startPosition + " to " + gesture.endPosition);
+			UnityLog.Log ("SwipeGesture  swipe happened " + gesture.swipeDirection + " went from " + gesture.startPosition + " to " + gesture.endPosition);
+
+			if (gesture.swipeDirection == SwipeGesture.SwipeDirection.Left)
+			{
+				if (ValidSwipe (gesture.startPosition))
+					SwipeLeft ();
+			}
+			else if (gesture.swipeDirection == SwipeGesture.SwipeDirection.Right)
+			{
+				if (ValidSwipe (gesture.startPosition))
+					SwipRight ();
+			}
+			else if (gesture.swipeDirection == SwipeGesture.SwipeDirection.Up)
+			{
+
+				if (ValidSwipe (gesture.startPosition))
+					JumpToWall ();
+			}
+		}
+
+		bool ValidSwipe (Vector2 position)
+		{
+			return (InputManager.Instance.StickLeft && InputManager.Instance.InScreenRect (position, ScreenRect.RIGHT_SCREEN)) ||
+			(!InputManager.Instance.StickLeft && InputManager.Instance.InScreenRect (position, ScreenRect.LEFT_SCREEN));
 		}
 
 		void OnSwitchBridge (LevelBridge prevBridge, LevelBridge newBridge)

@@ -16,6 +16,7 @@ namespace MyCompany.MyGame
 		#region Attribute
 
 		private bool m_stickLeft = GameDefine.DEFAULT_JOYSTICK_LEFT;
+
 		/// <summary>
 		/// 摇杆是否在屏幕左侧区域还是右侧区域
 		/// </summary>
@@ -104,6 +105,26 @@ namespace MyCompany.MyGame
 		{
 			leftTouch.Update ();
 			rightTouch.Update ();
+		}
+
+		public bool InScreenRect (Vector2 position, ScreenRect rect)
+		{
+			bool result = false;
+			if (rect == ScreenRect.LEFT_SCREEN)
+			{
+				result = (position.x >= 0 && position.x <= halfScreenWidth && position.y >= 0 &&
+				position.y <= screenHeight);
+			}
+			else if (rect == ScreenRect.RIGHT_SCREEN)
+			{
+				result = (position.x >= halfScreenWidth && position.x <= screenWidth &&
+				position.y >= 0 && position.y <= screenHeight);
+			}
+			else if (rect == ScreenRect.WHOLE_SCREEN)
+			{
+				result = (position.x >= 0 && position.x <= screenWidth && position.y >= 0 && position.y <= screenHeight);
+			}
+			return result;
 		}
 
 		#endregion

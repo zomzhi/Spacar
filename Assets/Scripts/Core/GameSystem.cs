@@ -81,6 +81,8 @@ namespace MyCompany.MyGame
 			yield return InitializePoolManagement ();
 
 			yield return LoadGameScene ();
+
+			StartGenerate ();
 		}
 
 		void Update ()
@@ -97,9 +99,14 @@ namespace MyCompany.MyGame
 				StartPlay ();
 			}
 
-			if (Input.GetKeyDown (KeyCode.G))
+//			if (Input.GetKeyDown (KeyCode.G))
+//			{
+//				StartGenerate ();
+//			}
+
+			if (Input.GetKeyDown (KeyCode.M))
 			{
-				StartGenerate ();
+				ReloadScene ();
 			}
 		}
 
@@ -229,6 +236,32 @@ namespace MyCompany.MyGame
 		public void StartGenerate ()
 		{
 			currentGamePlay.StartGenerate ();
+		}
+
+		public void ReloadScene ()
+		{
+			AudioMgr.StopPlayMusic ();
+//			levelBlockPool.DespawnAll ();
+//			obstaclePool.DespawnAll ();
+
+			StartCoroutine (ReloadGame ());
+		}
+
+		IEnumerator ReloadGame ()
+		{
+			AsyncOperation op = SceneManager.LoadSceneAsync (GameDefine.GAME_SCENE, LoadSceneMode.Single);
+			op.allowSceneActivation = true;
+			while (!op.isDone)
+				yield return null;
+
+			Scene mainScene = SceneManager.GetSceneByName (GameDefine.GAME_SCENE);
+			while (!mainScene.isLoaded)
+				yield return null;
+
+			currentGamePlay = GetGamePlay (mainScene);
+			UnityLog.Assert ((currentGamePlay != null), "Missing GamePlay component in MainScene");
+
+			StartGenerate ();
 		}
 
 		#endregion
