@@ -97,8 +97,13 @@ namespace MyCompany.MyGame
 
 		private void InitTouchHandler ()
 		{
-			leftTouch = new TouchHandler (ScreenRect.LEFT_SCREEN);
-			rightTouch = new TouchHandler (ScreenRect.RIGHT_SCREEN);
+			#if UNITY_EDITOR || UNITY_EDITOR_WIN
+			leftTouch = new MouseTouchHandler(0, ScreenRect.LEFT_SCREEN);
+			rightTouch = new MouseTouchHandler(1, ScreenRect.RIGHT_SCREEN);
+			#else
+			leftTouch = new DeviceTouchHandler(ScreenRect.LEFT_SCREEN);
+			rightTouch = new DeviceTouchHandler(ScreenRect.RIGHT_SCREEN);
+			#endif
 		}
 
 		void Update ()

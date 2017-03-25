@@ -9,6 +9,7 @@ using MyCompany.Common.Signal;
 using MyCompany.MyGame.NPC;
 using MyCompany.MyGame.Audio;
 using DG.Tweening;
+using UnityStandardAssets.ImageEffects;
 
 namespace MyCompany.MyGame
 {
@@ -32,6 +33,12 @@ namespace MyCompany.MyGame
 		public ELevelType firstBridgeType;
 		public GameDefine.BLOCK_SPECIFICATION firstBridgeWidth;
 		public int firstBridgeBlockCount;
+
+		public RectTransform togglePanel;
+		public EdgeDetection edgeDetect;
+		public Antialiasing antialiasing;
+		public VignetteAndChromaticAberration vignette;
+		public SENaturalBloomAndDirtyLens seNatural;
 
 		[HideInInspector]
 		public bool startPlay;
@@ -350,6 +357,31 @@ namespace MyCompany.MyGame
 		public void RePlay ()
 		{
 			GameSystem.Instance.ReloadScene ();
+		}
+
+		public void ToggleEdgeDetection()
+		{
+			edgeDetect.enabled = !edgeDetect.enabled;
+		}
+
+		public void ToggleAntialiasing()
+		{
+			antialiasing.enabled = !antialiasing.enabled;
+		}
+
+		public void ToggleVignette()
+		{
+			vignette.enabled = !vignette.enabled;
+		}
+
+		public void ToggleSENatural()
+		{
+			seNatural.enabled = !seNatural.enabled;
+		}
+
+		public void ToggleToggles()
+		{
+			togglePanel.gameObject.SetActive(!togglePanel.gameObject.activeSelf);
 		}
 
 		#endregion

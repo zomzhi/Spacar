@@ -1,5 +1,6 @@
-﻿using System;
-using UnityEngine;
+﻿using UnityEngine;
+using System.Collections;
+using System;
 
 namespace MyCompany.Common.Input
 {
@@ -10,20 +11,33 @@ namespace MyCompany.Common.Input
 		WHOLE_SCREEN
 	}
 
-	/// <summary>
-	/// 管理屏幕上的touch行为
-	/// 可模拟鼠标点击与移动设备的触摸
-	/// *** 此种写法使用了过多的宏来区分代码块，其实还可以将公有的属性抽象成接口，
-	/// *** 派生两个子类鼠标触摸与触屏触摸类来实现具体逻辑，
-	/// *** 根据具体平台来实例化相应的实例去完成功能。
-	/// </summary>
-	public class TouchHandler
+	public abstract class TouchHandler : ITouchEvent
 	{
+		public TouchHandler ()
+		{
+			InTouch = false;
+			Moved = false;
+		}
+
+		public string debugString;
+
 		public const float TAP_TIME_THRESHOLD = 0.25f;
-		public const float TAP_DISTANCE_THRESHOLD = 50f;
+		public const float TAP_DISTANCE_THRESHOLD = 10f;
+
+		#region ITouchEvent implementation
+
+		public event Action<TouchHandler> onTouchStart;
+
+		public event Action<TouchHandler> onTouchHold;
+
+		public event Action<TouchHandler> onTouchEnd;
+
+		public event Action<TouchHandler> onTap;
+
+		#endregion
 
 		/// <summary>
-		/// 触摸发生时的屏幕坐标
+		///  触摸发生时的屏幕坐标
 		/// </summary>
 		public Vector2 startPos;
 
@@ -33,23 +47,21 @@ namespace MyCompany.Common.Input
 		public float startTime;
 
 		/// <summary>
-		/// 触摸允许的屏幕区域
-		/// </summary>
-		public ScreenRect touchRect;
-
-		/// <summary>
 		/// 是否处于触摸状态
 		/// </summary>
 		/// <value><c>true</c> if in touch; otherwise, <c>false</c>.</value>
-		public bool InTouch{ get; private set; }
+		public bool InTouch{ get; protected set; }
 
-		private TouchPhase m_phase;
+		protected TouchPhase m_phase;
+
 		/// <summary>
 		/// 当前触摸的阶段
 		/// </summary>
+		/// <value>The phase.</value>
 		public TouchPhase Phase{ get { return m_phase; } }
 
-		private Vector2 m_position;
+		protected Vector2 m_position;
+
 		/// <summary>
 		/// 当前触摸的屏幕坐标
 		/// </summary>
@@ -65,171 +77,45 @@ namespace MyCompany.Common.Input
 			}
 		}
 
-		private Vector2 m_deltaPos;
+		protected Vector2 m_deltaPos;
+
 		/// <summary>
-		/// 当前帧与上一帧位置的差量
+		/// 当前帧与上一帧的差量
 		/// </summary>
 		/// <value>The delta position.</value>
 		public Vector2 DeltaPosition
 		{
-			get
-			{
-				#if UNITY_EDITOR || UNITY_STANDALONE_WIN
-				return m_deltaPos;
-				#else
-				return touch.deltaPosition;
-				#endif
-			}
+			get{ return m_deltaPos; }
 		}
 
 		/// <summary>
 		/// 触摸发生后是否移动过
 		/// </summary>
 		/// <value><c>true</c> if moved; otherwise, <c>false</c>.</value>
-		public bool Moved{ get; private set; }
+		public bool Moved{ get; protected set; }
 
-		#region Delegate Events
+		protected int frameCount = -1;
 
-		public event Action<TouchHandler> onTouchStart;
-		public event Action<TouchHandler> onTouchHold;
-		public event Action<TouchHandler> onTouchEnd;
-		public event Action<TouchHandler> onTap;
-
-		#endregion
-
-		#region Private Member
-
-		private Touch touch;
-		private int frameCount = -1;
-
-		/// <summary>
-		/// 上一帧的触摸位置
-		/// </summary>
-		private Vector2 lastPosition;
-
-		#endregion
-
-
-		/// <summary>
-		/// ctor
-		/// </summary>
-		public TouchHandler () : this (ScreenRect.WHOLE_SCREEN)
+		public virtual void Update ()
 		{
+			
 		}
 
-		/// <summary>
-		/// ctor
-		/// </summary>
-		public TouchHandler (ScreenRect touchRect)
-		{
-			this.touchRect = touchRect;
-		}
 
-		public void Update ()
+		protected bool ValidScreenPos (Vector2 pos, ScreenRect rect)
 		{
-			// Only update once in a frame
-			if (frameCount != Time.frameCount)
+			if(rect == ScreenRect.RIGHT_SCREEN)
 			{
-				if (touch.phase == TouchPhase.Ended || touch.phase == TouchPhase.Canceled)
-				{
-					InTouch = false;
-				}
-
-				// 更新触摸参数
-				Vector2 curPos = new Vector2 (UnityEngine.Input.mousePosition.x, UnityEngine.Input.mousePosition.y);
-				if (InTouch)
-				{
-					#if UNITY_EDITOR || UNITY_STANDALONE_WIN
-					if (UnityEngine.Input.GetMouseButtonUp (0) || !UnityEngine.Input.GetMouseButton (0))
-						EndTouch ();
-					m_position = curPos;
-					#else
-					if (touch.phase == TouchPhase.Ended || touch.phase == TouchPhase.Canceled)
-						EndTouch();
-					m_position = touch.position;
-					#endif
-
-					m_deltaPos = m_position - lastPosition;
-					lastPosition = m_position;
-					if (!Moved && InTouch && Position != startPos)
-						Moved = true;
-
-					if (!InTouch)
-					{
-						if (onTouchEnd != null)
-							onTouchEnd (this);
-
-						if ((m_position - startPos).magnitude < TAP_DISTANCE_THRESHOLD &&
-						    (Time.realtimeSinceStartup - startTime) < TAP_TIME_THRESHOLD && onTap != null)
-							onTap (this);
-					}
-
-					if (InTouch && onTouchHold != null)
-						onTouchHold (this);
-				}
-				else if (ValidTouchOccur ())
-				{
-					#if UNITY_EDITOR || UNITY_STANDALONE_WIN
-					startPos = m_position = new Vector2 (UnityEngine.Input.mousePosition.x, UnityEngine.Input.mousePosition.y);
-					m_phase = TouchPhase.Began;
-					#else
-					startPos = m_position = touch.position;
-					m_phase = touch.phase;
-					#endif
-					InTouch = true;
-					startTime = Time.realtimeSinceStartup;
-
-					if (onTouchStart != null)
-						onTouchStart (this);
-				}
-
-				frameCount = Time.frameCount;
+				return pos.x >= Screen.width * 0.5f && pos.x < Screen.width && pos.y >= 0 && pos.y <= Screen.height;
 			}
-		}
-
-		private bool ValidTouchOccur ()
-		{
-			float halfScreenWdith = Screen.width * 0.5f;
-
-			#if UNITY_EDITOR || UNITY_STANDALONE_WIN
-			Vector2 curPos = new Vector2 (UnityEngine.Input.mousePosition.x, UnityEngine.Input.mousePosition.y);
-			if (UnityEngine.Input.GetMouseButtonDown (0))
+			else if(rect == ScreenRect.LEFT_SCREEN)
 			{
-				if (touchRect == ScreenRect.LEFT_SCREEN && curPos.x < halfScreenWdith)
-					return true;
-				if (touchRect == ScreenRect.RIGHT_SCREEN && curPos.x > halfScreenWdith)
-					return true;
-				if (touchRect == ScreenRect.WHOLE_SCREEN)
-					return true;
+				return pos.x >= 0 && pos.x < Screen.width * 0.5f && pos.y >= 0 && pos.y <= Screen.height;
 			}
-			#else
-			foreach (Touch tempTouch in UnityEngine.Input.touches)
+			else
 			{
-				if (tempTouch.phase == TouchPhase.Began && touchRect == ScreenRect.LEFT_SCREEN && tempTouch.position.x < halfScreenWdith)
-				{
-					touch = tempTouch;
-					return true;
-				}
-				if (tempTouch.phase == TouchPhase.Began && touchRect == ScreenRect.RIGHT_SCREEN && tempTouch.position > halfScreenWdith)
-				{
-					touch = tempTouch;
-					return true;
-				}
-				if (tempTouch.phase == TouchPhase.Began && touchRect == ScreenRect.WHOLE_SCREEN)
-				{
-					touch = tempTouch;
-					return true;
-				}
+				return pos.x >= 0 && pos.x <= Screen.width && pos.y >= 0 && pos.y <= Screen.height;
 			}
-			#endif
-			return false;
-		}
-
-		private void EndTouch ()
-		{
-			InTouch = false;
-			m_phase = TouchPhase.Ended;
-			Moved = false;
 		}
 	}
 }

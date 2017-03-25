@@ -93,8 +93,8 @@ namespace MyCompany.MyGame.Player
 
 		void InitTouchHandler ()
 		{
-			leftTouch = new TouchHandler (ScreenRect.LEFT_SCREEN);
-			rightTouch = new TouchHandler (ScreenRect.RIGHT_SCREEN);
+			leftTouch = new MouseTouchHandler (0, ScreenRect.LEFT_SCREEN);
+			rightTouch = new MouseTouchHandler (1, ScreenRect.RIGHT_SCREEN);
 
 			stickTouch = m_stickLeft ? leftTouch : rightTouch;
 			skillTouch = m_stickLeft ? rightTouch : leftTouch;

@@ -52,8 +52,21 @@ namespace MyCompany.MyGame.Obstacle
 			if (callback != null)
 				callback (progress);
 
-			string obstalcePrefabPath = GameDefine.RESOURCE_FOLDER + GameDefine.OBSTACLE_PREFAB_RESOURCE_PATH;
-			string[] prefabsPath = Directory.GetFiles (obstalcePrefabPath, "*" + GameDefine.PREFAB_EXTENSION);
+			//string obstalcePrefabPath = GameDefine.RESOURCE_FOLDER + GameDefine.OBSTACLE_PREFAB_RESOURCE_PATH;
+			//string[] prefabsPath = Directory.GetFiles (obstalcePrefabPath, "*" + GameDefine.PREFAB_EXTENSION);
+			string[] prefabsPath = new string[12];
+			prefabsPath[0] = "Assets/Resources/Obstacles/ArchedEntrance 5x1x4.prefab";
+			prefabsPath[1] = "Assets/Resources/Obstacles/building1 2x4x6.prefab";
+			prefabsPath[2] = "Assets/Resources/Obstacles/building2 2x4x6.prefab";
+			prefabsPath[3] = "Assets/Resources/Obstacles/Light1 1x1x4.prefab";
+			prefabsPath[4] = "Assets/Resources/Obstacles/Light2 2x2x4.prefab";
+			prefabsPath[5] = "Assets/Resources/Obstacles/Light3 1x2x4.prefab";
+			prefabsPath[6] = "Assets/Resources/Obstacles/tile1 1x1x3.prefab";
+			prefabsPath[7] = "Assets/Resources/Obstacles/tile2 1x1x4.prefab";
+			prefabsPath[8] = "Assets/Resources/Obstacles/tile3 3x3x5.prefab";
+			prefabsPath[9] = "Assets/Resources/Obstacles/tile4 3x3x4.prefab";
+			prefabsPath[10] = "Assets/Resources/Obstacles/tile5 2x2x2.prefab";
+			prefabsPath[11] = "Assets/Resources/Obstacles/tile6 3x3x3.prefab";
 
 			for (int i = 0; i < prefabsPath.Length; i++)
 			{

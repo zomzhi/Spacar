@@ -1,11 +1,56 @@
 fileFormatVersion: 2
-guid: 26d1e21eb8914db43a615c08a0c6825c
+guid: e39bee657f115dd44b714bddb39e403f
 ModelImporter:
   serializedVersion: 19
   fileIDToRecycleName:
-    4300000: white_cherry1
-    4300002: pSphere1
-    4300004: BC
+    100000: //RootNode
+    100002: logo1
+    100004: logo2
+    100006: logo3
+    100008: logo4
+    100010: logo5
+    100012: logo6
+    100014: logo7
+    100016: logo8
+    100018: logo9
+    400000: //RootNode
+    400002: logo1
+    400004: logo2
+    400006: logo3
+    400008: logo4
+    400010: logo5
+    400012: logo6
+    400014: logo7
+    400016: logo8
+    400018: logo9
+    2300000: logo1
+    2300002: logo2
+    2300004: logo3
+    2300006: logo4
+    2300008: logo5
+    2300010: logo6
+    2300012: logo7
+    2300014: logo8
+    2300016: logo9
+    3300000: logo1
+    3300002: logo2
+    3300004: logo3
+    3300006: logo4
+    3300008: logo5
+    3300010: logo6
+    3300012: logo7
+    3300014: logo8
+    3300016: logo9
+    4300000: logo8
+    4300002: logo7
+    4300004: logo6
+    4300006: logo5
+    4300008: logo4
+    4300010: logo3
+    4300012: logo1
+    4300014: logo9
+    4300016: logo2
+    11100000: //RootNode
   materials:
     importMaterials: 1
     materialName: 0
@@ -13,7 +58,7 @@ ModelImporter:
   animations:
     legacyGenerateAnimations: 4
     bakeSimulation: 0
-    resampleRotations: 1
+    resampleCurves: 1
     optimizeGameObjects: 0
     motionNodeName: 
     animationImportErrors: 
@@ -30,7 +75,7 @@ ModelImporter:
     isReadable: 1
   meshes:
     lODScreenPercentages: []
-    globalScale: 0.75
+    globalScale: 1
     meshCompression: 0
     addColliders: 0
     importBlendShapes: 1

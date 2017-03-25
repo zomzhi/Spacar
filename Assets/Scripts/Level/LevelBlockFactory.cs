@@ -48,7 +48,7 @@ namespace MyCompany.MyGame.Level
 		/// </summary>
 		public LevelBlockFactory ()
 		{
-//			initialized = Initialize ();
+			initialized = false;
 		}
 
 		/// <summary>
@@ -127,20 +127,32 @@ namespace MyCompany.MyGame.Level
 		/// <param name="callback">Callback.</param>
 		public IEnumerator Init (SpawnPool pool, Action<float> callback)
 		{
-			if (initialized)
-				yield break;
+			UnityLog.Log("111 Start init");
+			///if (initialized)
+			///	yield break;
 
 			levelBlockPool = pool;
 			float progress = 0f;
 
-			string blockPrefabPath = GameDefine.RESOURCE_FOLDER + GameDefine.BLOCK_PREFAB_RESOURCE_PATH;
-			string[] prefabsPath = Directory.GetFiles (blockPrefabPath, "*" + GameDefine.PREFAB_EXTENSION);
+			// FIXME: Directory.GetFiles只能在编辑器内使用本地路径，打包后本地路径不存在了
+//			string blockPrefabPath = GameDefine.RESOURCE_FOLDER + GameDefine.BLOCK_PREFAB_RESOURCE_PATH;
+//			UnityLog.Log("111 blockPrefabPath: " + blockPrefabPath);
+//			string[] prefabsPath = Directory.GetFiles (blockPrefabPath, "*" + GameDefine.PREFAB_EXTENSION);
+			string[] prefabsPath = new string[2];
+			prefabsPath[0] = "Assets/Resources/BlockPrefabs/BlockStraight 30x30.prefab";
+			prefabsPath[1] = "Assets/Resources/BlockPrefabs/BlockStraightCLose 30x30.prefab";
+
+			string prefabStr = "111 ";
+			for(int i = 0; i < prefabsPath.Length; i++)
+				prefabStr += prefabsPath[i] + "; ";
+			UnityLog.Log(prefabStr);
 
 			for (int i = 0; i < prefabsPath.Length; i++)
 			{
 				string path = prefabsPath [i];
 				string prefabPath = path.Substring (path.LastIndexOf ('/') + 1).Replace (GameDefine.PREFAB_EXTENSION, "");
 				prefabPath = GameDefine.BLOCK_PREFAB_RESOURCE_PATH + prefabPath;
+				UnityLog.Log("111 prefabPath: " + prefabPath);
 
 				// load prefab
 				ResourceRequest request = Resources.LoadAsync<GameObject> (prefabPath);
@@ -154,14 +166,14 @@ namespace MyCompany.MyGame.Level
 				GameObject prefab = request.asset as GameObject;
 				if (prefab == null)
 				{
-					UnityLog.LogError ("Missing block prefab : " + prefabPath);
+					UnityLog.LogError ("111 Missing block prefab : " + prefabPath);
 					continue;
 				}
 
 				LevelBlock lb = prefab.GetComponent<LevelBlock> ();
 				if (lb == null)
 				{
-					UnityLog.LogError ("Block prefab missing component LevelBlock : " + prefabPath);
+					UnityLog.LogError ("111 Block prefab missing component LevelBlock : " + prefabPath);
 					continue;
 				}
 
@@ -174,11 +186,13 @@ namespace MyCompany.MyGame.Level
 					prefabList.blockWidth = blockWidth;
 					prefabList.sameWidthBlockPrefabs = new List<BlockPrefab> ();
 					blockPrefabInfoList.Add (prefabList);
+					UnityLog.Log("111 add prefabList with width " + blockWidth);
 				}
 				BlockPrefab blockPrefab = new BlockPrefab ();
 				blockPrefab.levelBlock = lb;
 				blockPrefab.prefab = prefab;
 				prefabList.sameWidthBlockPrefabs.Add (blockPrefab);
+				UnityLog.Log("111 prefabList with same width add prefab " + prefab.name);
 
 				if (lb.IsPreload)
 				{
@@ -188,6 +202,9 @@ namespace MyCompany.MyGame.Level
 					newPrefabPool.preloadTime = false;
 					newPrefabPool.preloadAmount = 0;
 					pool.CreatePrefabPool (newPrefabPool);
+
+
+					UnityLog.Log("111 Preload instances");
 
 					yield return GameUtils.PreloadInstances (newPrefabPool, lb);
 				}

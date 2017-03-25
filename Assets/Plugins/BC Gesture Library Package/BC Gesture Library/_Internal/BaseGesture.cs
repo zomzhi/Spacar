@@ -62,7 +62,8 @@ public class BaseGesture  : MonoBehaviour
 		if (fingerControl == null) {			
 			//Debug.Log("BaseGesture:initialize create fingerControl in " + gameObject.name);
 #if ON_DEVICE
-			fingerControl =  (FingerControl) this.gameObject.AddComponent("TouchScreenControl");
+//			fingerControl =  (FingerControl) this.gameObject.AddComponent("TouchScreenControl");
+			fingerControl =  (FingerControl) this.gameObject.AddComponent<TouchScreenControl>();
 #else
 			fingerControl = (FingerControl) this.gameObject.AddComponent<MouseControl>();
 #endif	

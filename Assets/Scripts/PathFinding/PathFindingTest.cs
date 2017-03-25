@@ -6,7 +6,6 @@ using MyCompany.MyGame;
 
 public class PathFindingTest : MonoBehaviour
 {
-	#if UNITY_EDITOR
 	public LevelBridge bridge;
 	public Transform seeker;
 	public Transform target;
@@ -64,6 +63,5 @@ public class PathFindingTest : MonoBehaviour
 			}
 		}
 	}
-	#endif
 }
 

@@ -1,17 +1,34 @@
 fileFormatVersion: 2
-guid: e39bee657f115dd44b714bddb39e403f
+guid: 26d1e21eb8914db43a615c08a0c6825c
 ModelImporter:
   serializedVersion: 19
   fileIDToRecycleName:
-    4300000: logo8
-    4300002: logo7
-    4300004: logo6
-    4300006: logo5
-    4300008: logo4
-    4300010: logo3
-    4300012: logo1
-    4300014: logo9
-    4300016: logo2
+    100000: BC
+    100002: BC_LogoB
+    100004: //RootNode
+    100006: bend1HandleH
+    100008: bend2HandleV
+    100010: group1
+    100012: pSphere1
+    100014: white_cherry1
+    400000: BC
+    400002: BC_LogoB
+    400004: //RootNode
+    400006: bend1HandleH
+    400008: bend2HandleV
+    400010: group1
+    400012: pSphere1
+    400014: white_cherry1
+    2300000: BC
+    2300002: pSphere1
+    2300004: white_cherry1
+    3300000: BC
+    3300002: pSphere1
+    3300004: white_cherry1
+    4300000: white_cherry1
+    4300002: pSphere1
+    4300004: BC
+    11100000: //RootNode
   materials:
     importMaterials: 1
     materialName: 0
@@ -19,7 +36,7 @@ ModelImporter:
   animations:
     legacyGenerateAnimations: 4
     bakeSimulation: 0
-    resampleRotations: 1
+    resampleCurves: 1
     optimizeGameObjects: 0
     motionNodeName: 
     animationImportErrors: 
@@ -36,7 +53,7 @@ ModelImporter:
     isReadable: 1
   meshes:
     lODScreenPercentages: []
-    globalScale: 1
+    globalScale: 0.75
     meshCompression: 0
     addColliders: 0
     importBlendShapes: 1
